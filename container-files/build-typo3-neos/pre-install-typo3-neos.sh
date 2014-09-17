@@ -26,19 +26,25 @@ echo
 echo "Installing TYPO3 Neos *$TYPO3_NEOS_VERSION* from $TYPO3_NEOS_REPO_URL repository."
 echo
 
+# Internal variables
+CWD="/tmp"
+NEOS_DIR="typo3-neos"
+
+cd $CWD
+
 # Clone Neos distribution from provided repository
-git clone $TYPO3_NEOS_REPO_URL /tmp/typo3-neos
-cd /tmp/typo3-neos
+git clone $TYPO3_NEOS_REPO_URL $NEOS_DIR
+cd $NEOS_DIR
 
 # Do composer install
 git checkout $TYPO3_NEOS_VERSION
 COMPOSER_PROCESS_TIMEOUT=900 composer install $TYPO3_NEOS_COMPOSER_PARAMS
 
-# Prepare tar archive
-cd /tmp && tar -zcf typo3-neos.tgz ./typo3-neos 
-rm -rf /tmp/typo3-neos # Save container space by keeping only .tgz archive
+# Prepare tar archive and keep only it (remove neos dir)
+cd $CWD
+tar -zcf $NEOS_DIR.tgz $NEOS_DIR && rm -rf $NEOS_DIR
 
 echo
 echo "TYPO3 Neos $TYPO3_NEOS_VERSION installed."
-echo $(ls -lh /tmp/)
+echo $(ls -lh $CWD)
 echo 

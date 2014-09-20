@@ -1,10 +1,10 @@
 # TYPO3 Neos | Abstract Docker image
 
-This is a Docker image which is designed to easily create images with standard or customised [TYPO3 Neos](http://neos.typo3.org/) installation. It is available in Docker Hub as [million12/typo3-neos-abstract](https://registry.hub.docker.com/u/million12/typo3-neos-abstract).
+This is a Docker image which is designed to easily create images with standard or customised [TYPO3 Neos](http://neos.typo3.org/) installation, from default "base" distribution or your own private repository. It is available in Docker Hub as [million12/typo3-neos-abstract](https://registry.hub.docker.com/u/million12/typo3-neos-abstract).
 
 For an example of working TYPO3 Neos image built on top of this one, see [million12/typo3-neos](https://registry.hub.docker.com/u/million12/typo3-neos) repository.
 
-The image is designed that as a result, after running a container from it, you'll get working TYPO3 Neos in a matter of seconds. When the image is being build, it pre-installs requested version of TYPO3 Neos. When container is launched, it will initialise and configure previously pre-installed package, but the process is very quick as everything is already in place. Nginx vhosts will be set, Settings.yaml will be updated with database credentials (to a linked db container), initial Neos admin user will be created and site package will be imported. Read below about available ENV variables to customise your setup.
+The image is designed that as a result, after running a container from it, you'll get working TYPO3 Neos in a matter of seconds. When the image is being built, it pre-installs requested version of TYPO3 Neos. Later on, when container is launched, it will initialise and configure that pre-installed package - and the process is very quick as the whole source code is already in place. During that process Nginx vhost(s) will be set, Settings.yaml will be updated with database credentials (linked db container), initial Neos admin user will be created and specified site package will be imported. Read below about available ENV variables to customise your setup.
 
 ## Usage
 
@@ -35,10 +35,10 @@ See [README.md](https://github.com/million12/docker-typo3-neos/README.md) from [
 
 ## How does it work
 
-You create new Docker image based on this one (place `FROM million12/typo3-neos-abstract:latest` in your Dockerfile). During *build process* of your image, TYPO3 Neos will be pre-installed via composer install and embedded inside the image. Using ENV variables (listed below) you can customise that pre-install phase: provide custom distribution (e.g. from GitHub repo) or select different version of TYPO3 Neos. See [pre-install-typo3-neos.sh](container-files/build-typo3-neos/pre-install-typo3-neos.sh) for details. 
+You start with creating new Docker image based on **million12/typo3-neos-abstract**, using `FROM million12/typo3-neos-abstract:latest` in your Dockerfile. During *build process* of your image, TYPO3 Neos will be pre-installed via composer install and embedded inside the image as a tar achive. Using ENV variables (listed below) you can customise pre-install process: provide custom distribution (e.g. from GitHub repo) or specify different version of TYPO3 Neos. See [pre-install-typo3-neos.sh](container-files/build-typo3-neos/pre-install-typo3-neos.sh) for details. 
 
-Next, when the container is launched, it will do all necessary steps to make Neos up & running. Script [configure-typo3-neos.sh](container-files/build-typo3-neos/configure-typo3-neos.sh) will set up Nginx vhost config, supply Settings.yaml with database credentials (using linked DB container), and - if it's empty database - do doctrine migration, set admin user and import initial site package. You can fully customise all details via ENV variables.  
- 
+When the container is launched from your freshly created image, it will do all necessary steps to make Neos up & running. Script [configure-typo3-neos.sh](container-files/build-typo3-neos/configure-typo3-neos.sh) will set up Nginx vhost config, supply Settings.yaml with database credentials (using linked DB container), and - if it's an empty database - do doctrine migration, set admin user and import specified site package. You can fully customise all details via ENV variables.
+
 ## Customise your image
 
 ### Dockerfile
@@ -67,7 +67,7 @@ Note the last line with RUN action, which needs to be added by you.
 
 ##### Accessing private repositories example
 
-To access private repositories, generate new SSH key set and add it as deployment key to your private repository. Then you only need to embed them inside your image (via `ADD` instruction in the Dockerfile) and configure SSH to use them during *git clone*. Your Dockerfile could look as following:
+To access private repositories, generate a new SSH key set and add the key as deployment key to your private repository. Then you need to embed them inside your image (via `ADD` instruction in the Dockerfile) and configure SSH that they will be used during *git clone*. Your Dockerfile could look as following:
  
 ```
 FROM million12/typo3-neos-abstract:latest
@@ -84,7 +84,7 @@ RUN \
 
 ### Runtime variables
 
-The following are ENV variables which can be overridden when container is launched (via --env). You can also embed them in your Dockerfile. See [configure-typo3-neos.sh](container-files/build-typo3-neos/configure-typo3-neos.sh) where they are defined with their default values. 
+Following is the list of available ENV variables which can be overridden when container is launched (via --env). You can also embed them in your Dockerfile. See [configure-typo3-neos.sh](container-files/build-typo3-neos/configure-typo3-neos.sh) where they are defined with their default values. 
 
 **NEOS_APP_NAME**  
 Default: `NEOS_APP_NAME=${NEOS_APP_NAME:="neos"}`  
@@ -114,7 +114,10 @@ If you pre-installed custom TYPO3 Neos distribution, you'll probably want to rep
 
 ### Custom build steps
 
-You might want to add extra steps to the standard ones provided by [configure-typo3-neos.sh](container-files/build-typo3-neos/configure-typo3-neos.sh) script. This script is invoked from [/config/init/20-init-typo3-neos-app](config/init/20-init-typo3-neos-app) - all scripts available there are run when container starts. Therefore you can add there your own, simply via `ADD custom-init.sh /config/init/` in your Dockerfile.
+You might want to add extra steps to the standard ones provided by [configure-typo3-neos.sh](container-files/build-typo3-neos/configure-typo3-neos.sh) script. There are two ways to do that:
+
+1. Configure script will run ./build.sh from project's root directory. Make it executable and it will be run at the end of the process.
+2. If you need something bigger, more customised, you can use for that custom scripts added to `/config/init/*.sh`. The base image is designed that it runs all scripts from there. For example, script which configures TYPO3 Neos is run from [/config/init/20-init-typo3-neos-app](config/init/20-init-typo3-neos-app). Using this, you can easily add extra tasks before and/or after it.
 
 
 ## Authors

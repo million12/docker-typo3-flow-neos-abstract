@@ -32,7 +32,7 @@ SETTINGS_SOURCE_FILE="${CWD}/Settings.yaml"
 VHOST_SOURCE_FILE="${CWD}/vhost.conf"
 VHOST_FILE="/data/conf/nginx/hosts.d/${NEOS_APP_NAME}.conf"
 MYSQL_CMD_AUTH_PARAMS="--user=admin --password=$DB_ENV_MARIADB_PASS --host=$DB_PORT_3306_TCP_ADDR --port=$DB_PORT_3306_TCP_PORT"
-
+NEOS_USER_BUILD_SCRIPT="build.sh" # Script which might be present in $NEOS_ROOT and will be called at the end of the setup process
 
 
 #######################################
@@ -68,7 +68,7 @@ function wait_for_db() {
 
 #########################################################
 # Moves pre-installed in /tmp TYPO3 Neos to its
-# its target location ($NEOS_ROOT)
+# its target location ($NEOS_ROOT), if it's not there yet
 # Globals:
 #   WEB_ROOT
 #   NEOS_ROOT
@@ -91,7 +91,6 @@ function install_typo3_neos() {
 #########################################################
 function create_app_db() {
   log "Creating Neos db '$NEOS_APP_DB_NAME' (if doesn't exist)..."
-#  mysql $MYSQL_CMD_AUTH_PARAMS --execute="DROP DATABASE IF EXISTS $NEOS_APP_DB_NAME"
   mysql $MYSQL_CMD_AUTH_PARAMS --execute="CREATE DATABASE IF NOT EXISTS $NEOS_APP_DB_NAME CHARACTER SET utf8 COLLATE utf8_general_ci"
   log "DB created."
 }
@@ -205,8 +204,19 @@ function set_permissions() {
   chown -R www:www $NEOS_ROOT
 }
 
-
-
+#########################################################
+# If the installed TYPO3 Neos distribution contains
+# executable ./build.sh file, it will run it.
+# This script should do all necessary steps to make
+# the site up&running, e.g. compile CSS.
+#########################################################
+function user_build_script() {
+  cd $NEOS_ROOT;
+  if [[ -x $NEOS_USER_BUILD_SCRIPT ]]; then
+    # Run ./build.sh script as 'www' user
+    su www -c "./$NEOS_USER_BUILD_SCRIPT"
+  fi
+}
 
 
 
@@ -232,5 +242,6 @@ warmup_cache "Production"
 set_permissions
 
 create_vhost_conf $NEOS_APP_VHOST_NAMES
+user_build_script
 
 log "Installation completed."

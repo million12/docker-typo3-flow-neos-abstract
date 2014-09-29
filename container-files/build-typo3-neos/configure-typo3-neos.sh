@@ -136,11 +136,11 @@ function create_settings_yaml() {
   fi
 
   log "Configuring $settings_file..."
-  sed -i -r "s/dbname: .+?/dbname: $NEOS_APP_DB_NAME/g" $settings_file
-  sed -i -r "s/user: .+?/user: admin/g" $settings_file
-  sed -i -r "s/password: .+?/password: $DB_ENV_MARIADB_PASS/g" $settings_file
-  sed -i -r "s/host: .+?/host: $DB_PORT_3306_TCP_ADDR/g" $settings_file
-  sed -i -r "s/port: .+?/port: $DB_PORT_3306_TCP_PORT/g" $settings_file
+  sed -i -r "1,/dbname:/s/dbname: .+?/dbname: $NEOS_APP_DB_NAME/g" $settings_file
+  sed -i -r "1,/user:/s/user: .+?/user: admin/g" $settings_file
+  sed -i -r "1,/password:/s/password: .+?/password: $DB_ENV_MARIADB_PASS/g" $settings_file
+  sed -i -r "1,/host:/s/host: .+?/host: $DB_PORT_3306_TCP_ADDR/g" $settings_file
+  sed -i -r "1,/port:/s/port: .+?/port: $DB_PORT_3306_TCP_PORT/g" $settings_file
 
   cat $settings_file
   log "$settings_file updated."

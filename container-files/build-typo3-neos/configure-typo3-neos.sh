@@ -19,6 +19,8 @@ NEOS_APP_USER_FNAME=${NEOS_APP_USER_FNAME:="Admin"}
 NEOS_APP_USER_LNAME=${NEOS_APP_USER_LNAME:="User"}
 NEOS_APP_VHOST_NAMES=${NEOS_APP_VHOST_NAMES:="${NEOS_APP_NAME} dev.${NEOS_APP_NAME} test.${NEOS_APP_NAME}"}
 NEOS_APP_SITE_PACKAGE=${NEOS_APP_SITE_PACKAGE:="TYPO3.NeosDemoTypo3Org"}
+NEOS_APP_FORCE_PULL=${NEOS_APP_FORCE_PULL:=true}
+NEOS_APP_FORCE_SITE_REIMPORT=${NEOS_APP_FORCE_SITE_REIMPORT:=false}
 #
 # ENV variables (end)
 #
@@ -41,8 +43,7 @@ NEOS_USER_BUILD_SCRIPT="build.sh" # Script which might be present in $NEOS_ROOT 
 #   String: value to log
 #######################################
 log() {
-  local app_name=$(echo $NEOS_APP_NAME | awk '{print toupper($0)}')
-  echo "=> ${app_name} APP: $@" >&2
+  echo "=> ${NEOS_APP_NAME^^} APP: $@" >&2
 }
 
 #########################################################
@@ -75,11 +76,24 @@ function wait_for_db() {
 #   NEOS_APP_NAME
 #########################################################
 function install_typo3_neos() {
+  # Check if app is already installed (when restaring stopped container)
   if [ ! -d $NEOS_ROOT ]; then
     log "Installing TYPO3 Neos (from pre-installed archive)"
     cd $WEB_ROOT && tar -zxf /tmp/typo3-neos.tgz
     mv typo3-neos $NEOS_APP_NAME
-    log "Neos installed."
+  fi
+
+  log "Neos installed."
+  cd $NEOS_ROOT
+  git log -5 --pretty=format:"%h %an %cr: %s" --graph # Show most recent changes
+  
+  # If app is/was already installed, pull most recent code
+  if [ "${NEOS_APP_FORCE_PULL^^}" = TRUE ]; then
+    log "Resetting current working directory..."
+    git status && git clean -f -d && git reset --hard # make the working dir clean
+    log "Pulling the newest codebase..."
+    git pull
+    git log -10 --pretty=format:"%h %an %cr: %s" --graph
   fi
 }
 
@@ -185,6 +199,17 @@ function install_site_package() {
   local site_package_name=$@
   log "Installing $site_package_name site package..."
   ./flow site:import --packageKey $site_package_name
+  log "Done."
+}
+
+#########################################################
+# Prune all site data.
+# Used when re-importing the site package.
+#########################################################
+function prune_site_package() {
+  log "Pruning old site..."
+  ./flow site:prune --confirmation
+  log "Done."
 }
 
 #########################################################
@@ -233,6 +258,12 @@ if [[ $(get_latest_db_migration) == 0 ]]; then
   doctrine_update
   create_admin_user
   install_site_package $NEOS_APP_SITE_PACKAGE
+# Re-import the site, if requested
+elif [ "${NEOS_APP_FORCE_SITE_REIMPORT^^}" = TRUE ]; then
+  log "NEOS_APP_FORCE_SITE_REIMPORT=${NEOS_APP_FORCE_SITE_REIMPORT}, re-importing $NEOS_APP_SITE_PACKAGE site package."
+  prune_site_package
+  install_site_package $NEOS_APP_SITE_PACKAGE
+# Nothing else to do...
 else
   log "Neos db already provisioned, skipping..."
 fi

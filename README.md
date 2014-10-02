@@ -116,8 +116,6 @@ Default: `NEOS_APP_FORCE_SITE_REIMPORT=false`
 Set to true to prune (`./flow site:prune`) and re-import ('./flow site:import ...`) site content each time container starts. Useful if you keep your Sites.xml versioned and in sync.
 
 **NEOS_APP_FORCE_PULL**  
-Default: `NEOS_APP_FORCE_PULL=true`  
-By default, when container starts, `git pull` (preceded by git clean/reset to avoid any potential conflicts) command will be executed inside TYPO3 Neos root directory. This is to enforce always fresh/latest codebase of your app, even if the pre-installed version is a bit outdated. Set to *false* to switch off this behaviour.
 
 
 ### Custom build steps
@@ -126,6 +124,8 @@ You might want to add extra steps to the standard ones provided by [configure-ty
 
 1. Configure script will run ./build.sh from project's root directory. Make it executable and it will be run at the end of the process.
 2. If you need something bigger, more customised, you can use for that custom scripts added to `/config/init/*.sh`. The base image is designed that it runs all scripts from there. For example, script which configures TYPO3 Neos is run from [/config/init/20-init-typo3-neos-app](config/init/20-init-typo3-neos-app). Using this, you can easily add extra tasks before and/or after it.
+Default: `NEOS_APP_FORCE_PULL=false`  
+Set to true to execute `git pull` command inside Neos root directory (preceded by git clean/reset to avoid any potential conflicts). This might be useful to ensure fresh/latest codebase of your app, even if the pre-installed image version is a bit outdated. Note: if you provided $TYPO3\_NEOS\_VERSION which is not a branch, the pull will fail.
 
 
 ## Authors

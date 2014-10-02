@@ -33,6 +33,9 @@ NEOS_ROOT="${WEB_ROOT}/${NEOS_APP_NAME}"
 SETTINGS_SOURCE_FILE="${CWD}/Settings.yaml"
 VHOST_SOURCE_FILE="${CWD}/vhost.conf"
 VHOST_FILE="/data/conf/nginx/hosts.d/${NEOS_APP_NAME}.conf"
+DB_ENV_MARIADB_PASS=${DB_ENV_MARIADB_PASS:="password"}
+DB_PORT_3306_TCP_ADDR=${DB_PORT_3306_TCP_ADDR:="127.0.0.1"}
+DB_PORT_3306_TCP_PORT=${DB_PORT_3306_TCP_PORT:="3306"}
 MYSQL_CMD_AUTH_PARAMS="--user=admin --password=$DB_ENV_MARIADB_PASS --host=$DB_PORT_3306_TCP_ADDR --port=$DB_PORT_3306_TCP_PORT"
 NEOS_USER_BUILD_SCRIPT="build.sh" # Script which might be present in $NEOS_ROOT and will be called at the end of the setup process
 
@@ -120,15 +123,21 @@ function create_app_db() {
 #########################################################
 function create_vhost_conf() {
   local vhost_names=$@
+  local vhost_names_arr=($vhost_names)
   log "Configuring vhost in ${VHOST_FILE} for vhost(s) ${vhost_names}"
 
   if [ ! -f $VHOST_FILE ]; then
     cat $VHOST_SOURCE_FILE > $VHOST_FILE
   fi
 
-  sed -i -r "s#server_name .+?#server_name ${vhost_names}\;#g" $VHOST_FILE
-  sed -i -r "s#root .+?#root ${NEOS_ROOT}/Web\;#g" $VHOST_FILE
-
+  sed -i -r "s#%server_name%#${vhost_names}#g" $VHOST_FILE
+  sed -i -r "s#%root%#${NEOS_ROOT}#g" $VHOST_FILE
+  
+  # Configure redirect: www to non-www
+  # @TODO: make it configurable via env var
+  # @TODO: make possible reversed behaviour (non-www to www)
+  sed -i -r "s#%server_name_primary%#${vhost_names_arr[0]}#g" $VHOST_FILE
+  
   cat $VHOST_FILE
   log "Nginx vhost configured."
 }

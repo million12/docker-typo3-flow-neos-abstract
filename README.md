@@ -35,9 +35,40 @@ See [README.md](https://github.com/million12/docker-typo3-neos/README.md) from [
 
 ## How does it work
 
-You start with creating new Docker image based on **million12/typo3-neos-abstract**, using `FROM million12/typo3-neos-abstract:latest` in your Dockerfile. During *build process* of your image, TYPO3 Neos will be pre-installed using `composer install` and embedded inside the image as a tar achive. Using ENV variables (listed below) you can customise pre-install process: provide custom distribution (e.g. from GitHub repo) or specify different version of TYPO3 Neos. See [pre-install-typo3-neos.sh](container-files/build-typo3-neos/pre-install-typo3-neos.sh) for details. 
+You start with creating a new Docker image based on **million12/typo3-neos-abstract**, using `FROM million12/typo3-neos-abstract:latest` in your Dockerfile. 
 
-When you start that prepared container, it will do all necessary steps to make TYPO3 Neos up & running. Script [configure-typo3-neos.sh](container-files/build-typo3-neos/configure-typo3-neos.sh) will set up Nginx vhost config, supply Settings.yaml with database credentials (using linked DB container), and - if it's an empty database - do doctrine migration, set admin user and import specified site package. You can fully customise all details via ENV variables.
+#### Build phase
+
+During *build process* of your image, TYPO3 Neos will be pre-installed using `composer install` and embedded inside the image as a tar achive. Using ENV variables (listed below) you can customise pre-install process: provide custom distribution (e.g. from your GitHub repo) or specify different version of TYPO3 Neos. For detailed info about how this pre-install script works, see [pre-install-typo3-neos.sh](container-files/build-typo3-neos/pre-install-typo3-neos.sh). 
+
+#### Container launched
+
+When you start that prepared container, it will run [configure-typo3-neos.sh](container-files/build-typo3-neos/configure-typo3-neos.sh) script which does all necessary steps to make TYPO3 Neos up & running. 
+
+Here are the details:
+
+##### Nginx vhost config
+File [vhost.conf](container-files/build-typo3-neos/vhost.conf) is used as model vhost config. Vhost names are supplied via *NEOS_APP_VHOST_NAMES* env variable. NOTE: currently there's configured redirect to non-www vhost (the 1st one shall you provided more than one).
+
+##### TYPO3 Neos app install
+Pre-installed during image build process TYPO3 Neos is unpacked to /data/www/$NEOS\_APP\_NAME and - optionally - git pull is executed (if $NEOS\_APP\_FORCE\_PULL is set to true).
+
+##### Database config
+Default Configuration/Settings.yaml is created (if doesn't exist) and updated with DB credentials to linked db container. NEOS\_APP\_DB_NAME is created if it doesn't exist yet.
+
+##### Doctrine migration, site package install
+If fresh/empty database is detected, `./flow doctrine:migrate` is perfomed, admin user is created and $NEOS\_APP\_SITE\_PACKAGE is imported. If $NEOS\_APP\_FORCE\_SITE\_REIMPORT is set, site content will be pruned and imported each time container starts.
+
+##### Cache, permissions
+Cache is warmed up for Production and Development contexts, filesystem permissions are updated/fixed.
+
+##### Application's build.sh
+If scripts detects executable `build.sh` in the Neos root directory, it will run it. This is a good place to add custom build steps, like compiling CSS, minifying JS, generating resources etc.
+
+##### Your own build steps
+
+You might want to add extra steps to the ones provided above. If application's build.sh is not the right place to do it, you can add custom scripts to `/config/init/*.sh`. The image is designed that it runs all scripts from there when cointainer starts. For example, the script which configures TYPO3 Neos is run from [/config/init/20-init-typo3-neos-app](config/init/20-init-typo3-neos-app). You can easily add extra tasks before and/or after it, using number prefixes in your script names.
+
 
 ## Customise your image
 
@@ -65,7 +96,8 @@ RUN . /build-typo3-neos/pre-install-typo3-neos.sh
 
 Note the last line with RUN action, which needs to be added by you.
 
-##### Accessing private repositories example
+
+### Accessing private repositories example
 
 To access private repositories, generate a new SSH key set and add the key as deployment key to your private repository. Then you need to embed them inside your image (via `ADD` instruction in the Dockerfile) and configure SSH that they will be used during *git clone*. Your Dockerfile could look as following:
  
@@ -80,6 +112,24 @@ RUN \
   echo "IdentityFile /gh-repo-key" >> /etc/ssh/ssh_config && \
   . /build-typo3-neos/pre-install-typo3-neos.sh
 ```
+
+## Environmental variables
+
+### Dockerfile variables
+
+These are variables relevant during build process of your custom image:
+
+**TYPO3_NEOS_REPO_URL**  
+Default: `TYPO3_NEOS_REPO_URL=git://git.typo3.org/Neos/Distributions/Base.git`  
+Override it with your repository URL, if needed. Note: if it's going to be private repository (read more above about configuring SSH deployment keys), remember to use SSH git url in format *git@github.com:user/package.git*.
+
+**TYPO3_NEOS_VERSION**  
+Default: `TYPO3_NEOS_VERSION=master`  
+Branch or tag name to checkout. For instance, to install default TYPO3 Neos base distribution, but **stable version**, you might want to override it with `1.1.2`.
+
+**TYPO3_NEOS_COMPOSER_PARAMS**  
+Default: `TYPO3_NEOS_COMPOSER_PARAMS=--dev --prefer-source`  
+Extra parameters for `composer install`. You might override it with e.g. `--no-dev --prefer-dist --optimize-autoloader` on production.
 
 ### Runtime variables
 
@@ -116,14 +166,6 @@ Default: `NEOS_APP_FORCE_SITE_REIMPORT=false`
 Set to true to prune (`./flow site:prune`) and re-import ('./flow site:import ...`) site content each time container starts. Useful if you keep your Sites.xml versioned and in sync.
 
 **NEOS_APP_FORCE_PULL**  
-
-
-### Custom build steps
-
-You might want to add extra steps to the standard ones provided by [configure-typo3-neos.sh](container-files/build-typo3-neos/configure-typo3-neos.sh) script. There are two ways to do that:
-
-1. Configure script will run ./build.sh from project's root directory. Make it executable and it will be run at the end of the process.
-2. If you need something bigger, more customised, you can use for that custom scripts added to `/config/init/*.sh`. The base image is designed that it runs all scripts from there. For example, script which configures TYPO3 Neos is run from [/config/init/20-init-typo3-neos-app](config/init/20-init-typo3-neos-app). Using this, you can easily add extra tasks before and/or after it.
 Default: `NEOS_APP_FORCE_PULL=false`  
 Set to true to execute `git pull` command inside Neos root directory (preceded by git clean/reset to avoid any potential conflicts). This might be useful to ensure fresh/latest codebase of your app, even if the pre-installed image version is a bit outdated. Note: if you provided $TYPO3\_NEOS\_VERSION which is not a branch, the pull will fail.
 

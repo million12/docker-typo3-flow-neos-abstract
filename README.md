@@ -50,6 +50,8 @@ Here are the details:
 ##### Nginx vhost config
 File [vhost.conf](container-files/build-typo3-neos/vhost.conf) is used as model vhost config. Vhost names are supplied via *NEOS_APP_VHOST_NAMES* env variable. NOTE: currently there's configured redirect to non-www vhost (the 1st one shall you provided more than one).
 
+You can completely override that template file if you need custom configuration.
+
 ##### TYPO3 Neos app install
 Pre-installed during image build process TYPO3 Neos is unpacked to /data/www/$NEOS\_APP\_NAME and - optionally - git pull is executed (if $NEOS\_APP\_FORCE\_PULL is set to true).
 

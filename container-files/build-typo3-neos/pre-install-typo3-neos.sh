@@ -35,6 +35,7 @@ cd $CWD
 # Clone Neos distribution from provided repository
 git clone $TYPO3_NEOS_REPO_URL $NEOS_DIR
 cd $NEOS_DIR
+git log -10 --pretty=format:"%h %an %cr: %s" --graph
 
 # Do composer install
 git checkout $TYPO3_NEOS_VERSION

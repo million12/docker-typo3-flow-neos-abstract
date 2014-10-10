@@ -81,7 +81,7 @@ function wait_for_db() {
 function install_typo3_neos() {
   # Check if app is already installed (when restaring stopped container)
   if [ ! -d $NEOS_ROOT ]; then
-    log "Installing TYPO3 Neos (from pre-installed archive)"
+    log "Installing TYPO3 Neos (from pre-installed archive)..."
     cd $WEB_ROOT && tar -zxf /tmp/typo3-neos.tgz
     mv typo3-neos $NEOS_APP_NAME
   fi
@@ -107,7 +107,7 @@ function install_typo3_neos() {
 #   MYSQL_CMD_AUTH_PARAMS
 #########################################################
 function create_app_db() {
-  log "Creating Neos db '$NEOS_APP_DB_NAME' (if doesn't exist)..."
+  log "Creating Neos db '$NEOS_APP_DB_NAME' (if it doesn't exist yet)..."
   mysql $MYSQL_CMD_AUTH_PARAMS --execute="CREATE DATABASE IF NOT EXISTS $NEOS_APP_DB_NAME CHARACTER SET utf8 COLLATE utf8_general_ci"
   log "DB created."
 }
@@ -196,7 +196,6 @@ function doctrine_update() {
 function create_admin_user() {
   log "Creating admin user..."
   ./flow user:create --roles Administrator $NEOS_APP_USER_NAME $NEOS_APP_USER_PASS $NEOS_APP_USER_FNAME $NEOS_APP_USER_LNAME
-  log "Admin user created (login: $NEOS_APP_USER_NAME, password: $NEOS_APP_USER_PASS)."
 }
 
 #########################################################
@@ -208,7 +207,6 @@ function install_site_package() {
   local site_package_name=$@
   log "Installing $site_package_name site package..."
   ./flow site:import --packageKey $site_package_name
-  log "Done."
 }
 
 #########################################################
@@ -277,11 +275,10 @@ else
   log "Neos db already provisioned, skipping..."
 fi
 
-warmup_cache "Development"
-warmup_cache "Production"
+warmup_cache "Production" # Warm-up caches for Production context
 set_permissions
 
 create_vhost_conf $NEOS_APP_VHOST_NAMES
 user_build_script
 
-log "Installation completed."
+log "Installation completed." && echo

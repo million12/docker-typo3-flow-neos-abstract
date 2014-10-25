@@ -21,6 +21,7 @@ NEOS_APP_VHOST_NAMES=${NEOS_APP_VHOST_NAMES:="${NEOS_APP_NAME} dev.${NEOS_APP_NA
 NEOS_APP_SITE_PACKAGE=${NEOS_APP_SITE_PACKAGE:="TYPO3.NeosDemoTypo3Org"}
 NEOS_APP_FORCE_PULL=${NEOS_APP_FORCE_PULL:=false}
 NEOS_APP_FORCE_SITE_REIMPORT=${NEOS_APP_FORCE_SITE_REIMPORT:=false}
+NEOS_APP_FORCE_VHOST_CONF_UPDATE=${NEOS_APP_FORCE_VHOST_CONF_UPDATE:=true}
 TYPO3_NEOS_COMPOSER_PARAMS=${TYPO3_NEOS_COMPOSER_PARAMS:="--optimize-autoloader"}
 #
 # ENV variables (end)
@@ -130,8 +131,14 @@ function create_vhost_conf() {
   local vhost_names_arr=($vhost_names)
   log "Configuring vhost in ${VHOST_FILE} for vhost(s) ${vhost_names}"
 
+  # Create fresh vhost file on new data volume
   if [ ! -f $VHOST_FILE ]; then
     cat $VHOST_SOURCE_FILE > $VHOST_FILE
+    log "New vhost file created."
+  # Vhost already exist, but NEOS_APP_FORCE_VHOST_CONF_UPDATE=true, so override it.
+  elif [ "${NEOS_APP_FORCE_VHOST_CONF_UPDATE^^}" = TRUE ]; then
+    cat $VHOST_SOURCE_FILE > $VHOST_FILE
+    log "Vhost file updated (as NEOS_APP_FORCE_VHOST_CONF_UPDATE is TRUE)."
   fi
 
   sed -i -r "s#%server_name%#${vhost_names}#g" $VHOST_FILE

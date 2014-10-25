@@ -50,7 +50,7 @@ Here are the details:
 ##### Nginx vhost config
 File [vhost.conf](container-files/build-typo3-neos/vhost.conf) is used as model vhost config. Vhost names are supplied via *NEOS_APP_VHOST_NAMES* env variable. NOTE: currently there's configured redirect to non-www vhost (the 1st one shall you provided more than one).
 
-You can completely override that template file if you need custom configuration.
+You can completely override that template file if you need custom configuration. Note that this vhost config file will be overridden/regenerated each time container starts unless you set env variable `NEOS_APP_FORCE_VHOST_CONF_UPDATE=false`.
 
 ##### TYPO3 Neos app install
 Pre-installed during image build process TYPO3 Neos is unpacked to /data/www/$NEOS\_APP\_NAME and - optionally - git pull is executed (if $NEOS\_APP\_FORCE\_PULL is set to true).
@@ -171,6 +171,9 @@ Set to true to prune (`./flow site:prune`) and re-import ('./flow site:import ..
 Default: `NEOS_APP_FORCE_PULL=false`  
 Set to true to execute `git pull` command inside Neos root directory (preceded by git clean/reset to avoid any potential conflicts). This might be useful to ensure fresh/latest codebase of your app, even if the pre-installed image version is a bit outdated. Note: if you provided $TYPO3\_NEOS\_VERSION which is not a branch, the pull will fail.
 
+**NEOS_APP_FORCE_VHOST_CONF_UPDATE**  
+Default: `NEOS_APP_FORCE_VHOST_CONF_UPDATE=true`
+When TRUE, Nginx vhost file will be always overridden with the content from [vhost.conf](container-files/build-typo3-neos/vhost.conf) template. You might override it and keep together with your project files to keep in in sync. If you prefer manual updates, set it to FALSE.
 
 ## Authors
 

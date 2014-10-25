@@ -39,7 +39,9 @@ You start with creating a new Docker image based on **million12/typo3-neos-abstr
 
 #### Build phase
 
-During *build process* of your image, TYPO3 Neos will be pre-installed using `composer install` and embedded inside the image as a tar achive. Using ENV variables (listed below) you can customise pre-install process: provide custom distribution (e.g. from your GitHub repo) or specify different version of TYPO3 Neos. For detailed info about how this pre-install script works, see [pre-install-typo3-neos.sh](container-files/build-typo3-neos/pre-install-typo3-neos.sh). 
+During *build process* of your image, TYPO3 Neos will be pre-installed using `composer install` and embedded inside the image as a tar achive. Using ENV variables (listed below) you can customise pre-install process: provide custom distribution (e.g. from your GitHub repo) or specify different version of TYPO3 Neos. For detailed info about how this pre-install script works, see [pre-install-typo3-neos.sh](container-files/build-typo3-neos/pre-install-typo3-neos.sh).
+
+In addition, if in the root directory of your repository have executable 'build.sh' it will be executed as `build.sh --preinstall`. You can easily add custom build steps there which you want to run during Docker build phase. 
 
 #### Container launched
 
@@ -65,7 +67,7 @@ If fresh/empty database is detected, `./flow doctrine:migrate` is perfomed, admi
 Cache is warmed up for Production and Development contexts, filesystem permissions are updated/fixed.
 
 ##### Application's build.sh
-If scripts detects executable `build.sh` in the Neos root directory, it will run it. This is a good place to add custom build steps, like compiling CSS, minifying JS, generating resources etc.
+If scripts detects executable `build.sh` in the Neos root directory, it will run it. This is a good place to add custom build steps, like compiling CSS, minifying JS, generating resources etc. Note that this is the same script which is run during Docker build phase (which is then run with `--preinstall` argument).
 
 ##### Your own build steps
 

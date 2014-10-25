@@ -41,6 +41,10 @@ git log -10 --pretty=format:"%h %an %cr: %s" --graph
 git checkout $TYPO3_NEOS_VERSION
 COMPOSER_PROCESS_TIMEOUT=900 composer install $TYPO3_NEOS_COMPOSER_PARAMS
 
+# Run build.sh script if exists, with --preinstall param
+# It's OK to run is as root as it might need these privileges to install some global tools.
+if [[ -x "build.sh" ]]; then ./build.sh --preinstall; fi
+
 # Prepare tar archive and keep only it (remove neos dir)
 cd $CWD
 tar -zcf $NEOS_DIR.tgz $NEOS_DIR && rm -rf $NEOS_DIR

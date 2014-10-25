@@ -21,6 +21,7 @@ NEOS_APP_VHOST_NAMES=${NEOS_APP_VHOST_NAMES:="${NEOS_APP_NAME} dev.${NEOS_APP_NA
 NEOS_APP_SITE_PACKAGE=${NEOS_APP_SITE_PACKAGE:="TYPO3.NeosDemoTypo3Org"}
 NEOS_APP_FORCE_PULL=${NEOS_APP_FORCE_PULL:=false}
 NEOS_APP_FORCE_SITE_REIMPORT=${NEOS_APP_FORCE_SITE_REIMPORT:=false}
+TYPO3_NEOS_COMPOSER_PARAMS=${TYPO3_NEOS_COMPOSER_PARAMS:="--optimize-autoloader"}
 #
 # ENV variables (end)
 #
@@ -98,6 +99,9 @@ function install_typo3_neos() {
     git pull
     git log -10 --pretty=format:"%h %an %cr: %s" --graph
   fi
+  
+  # If composer.lock has changed, this will re-install things...
+  composer install $TYPO3_NEOS_COMPOSER_PARAMS
 }
 
 #########################################################

@@ -1,4 +1,5 @@
 # TYPO3 Neos | Abstract Docker image
+[![Circle CI](https://circleci.com/gh/million12/docker-typo3-neos-abstract.png?style=badge)](https://circleci.com/gh/million12/docker-typo3-neos-abstract)
 
 This is a Docker image which is designed to easily create images with standard or customised [TYPO3 Neos](http://neos.typo3.org/) installation, either from the default "base" distribution or your own, perhaps private, repository. It is available in Docker Hub as [million12/typo3-neos-abstract](https://registry.hub.docker.com/u/million12/typo3-neos-abstract).
 
@@ -32,6 +33,11 @@ This will pre-install default TYPO3 Neos distribution, version 1.1.2. Uncomment 
 
 See [README.md](https://github.com/million12/docker-typo3-neos/README.md) from [million12/typo3-neos](https://github.com/million12/docker-typo3-neos) for more information about how to run all required containers (e.g. MariaDB) and have working instance of TYPO3 Neos.
 
+### Testing
+
+With this container, you can run all TYPO3 Neos tests, including behaviour tests which requires Selenium server. There is a env variable **NEOS_APP_DO_INIT_TESTS** to make this process as easy as possible. When NEOS_APP_DO_INIT_TESTS=true, testing environment and database will be configured.
+
+For an example how to run test suites included in TYPO3 Neos, see the [million12/behat-selenium](https://github.com/million12/docker-behat-selenium) repository.
 
 ## How does it work
 
@@ -66,12 +72,12 @@ If fresh/empty database is detected, `./flow doctrine:migrate` is perfomed, admi
 ##### Cache, permissions
 Cache is warmed up for Production and Development contexts, filesystem permissions are updated/fixed.
 
-##### Application's build.sh
+##### Application build.sh
 If scripts detects executable `build.sh` in the Neos root directory, it will run it. This is a good place to add custom build steps, like compiling CSS, minifying JS, generating resources etc. Note that this is the same script which is run during Docker build phase (which is then run with `--preinstall` argument).
 
 ##### Your own build steps
 
-You might want to add extra steps to the ones provided above. If application's build.sh is not the right place to do it, you can add custom scripts to `/config/init/*.sh`. The image is designed that it runs all scripts from there when cointainer starts. For example, the script which configures TYPO3 Neos is run from [/config/init/20-init-typo3-neos-app](config/init/20-init-typo3-neos-app). You can easily add extra tasks before and/or after it, using number prefixes in your script names.
+You might want to add extra steps to the ones provided above. If application's build.sh is not the right place to do it, you can add custom scripts to `/config/init/*.sh`. The image is designed that it runs all scripts from that location when the container starts.
 
 
 ## Customise your image
@@ -139,8 +145,20 @@ Extra parameters for `composer install`. You might override it with e.g. `--no-d
 
 Following is the list of available ENV variables which can be overridden when container is launched (via --env). You can also embed them in your Dockerfile. See [configure-typo3-neos.sh](container-files/build-typo3-neos/configure-typo3-neos.sh) where they are defined with their default values. 
 
+**NEOS_APP_DO_INIT**  
+Default: `NEOS_APP_DO_INIT=true`  
+When set to TRUE, TYPO3 Neos will be fully initialised, incl. importing/installing specified site package. It might be useful to set it to FALSE when you only want to run tests against this container and you do not need working site.
+
+**NEOS_APP_DO_INIT_TESTS**  
+Default: `NEOS_APP_DO_INIT_TESTS=false`  
+When set to TRUE, TYPO3 Neos will be prepared to run unit, functional and behavioral tests out of the box. If you set this option, you have to define vhost behat.dev.[your-base-domain] in *NEOS_APP_VHOST_NAMES* variable. This so-called "Behat vhost" will be used to configure corresponding behat.yml files and will be used for Behat testing.
+
+When this is set to TRUE, an empty database for testing is created, **Development/Behat** and **Testing/Behat** contexts are configured, all `Packages/*/*/Tests/Behavior/behat.yml.dist` are copied to `behat.yml`, with `base_url:` option set to detected "Behat vhost". In addition, `./flow behat:setup` command will be run to prepare all necessary dependencies for running the tests.
+
+For an example how to run all test suites included in TYPO3 Neos, see the [million12/behat-selenium](https://github.com/million12/docker-behat-selenium) repository.
+
 **NEOS_APP_NAME**  
-Default: `NEOS_APP_NAME=${NEOS_APP_NAME:="neos"}`  
+Default: `NEOS_APP_NAME=neos`  
 Used internally as a folder name in /data/www/NEOS_APP_NAME where Neos will be installed and it's used in default vhost name.
 
 **NEOS_APP_DB_NAME**  
@@ -151,18 +169,20 @@ Database name, which will be used for TYPO3 Neos. It will be created and migrate
 **NEOS_APP_USER_PASS**  
 **NEOS_APP_USER_FNAME**  
 **NEOS_APP_USER_LNAME**  
-Default: `NEOS_APP_USER_NAME=${NEOS_APP_USER_NAME:="admin"}`  
-Default: `NEOS_APP_USER_PASS=${NEOS_APP_USER_PASS:="password"}`  
-Default: `NEOS_APP_USER_FNAME=${NEOS_APP_USER_FNAME:="Admin"}`  
-Default: `NEOS_APP_USER_LNAME=${NEOS_APP_USER_LNAME:="User"}`  
+Default: `NEOS_APP_USER_NAME=admin`  
+Default: `NEOS_APP_USER_PASS=password`  
+Default: `NEOS_APP_USER_FNAME=Admin`  
+Default: `NEOS_APP_USER_LNAME=User`  
 If this is fresh installation, admin user will be created with above details.
 
 **NEOS_APP_VHOST_NAMES**  
-Default: `NEOS_APP_VHOST_NAMES=${NEOS_APP_VHOST_NAMES:="${NEOS_APP_NAME} dev.${NEOS_APP_NAME} test.${NEOS_APP_NAME}"}`  
+Default: `NEOS_APP_VHOST_NAMES="${NEOS_APP_NAME} dev.${NEOS_APP_NAME} behat.dev.${NEOS_APP_NAME}"`  
 Hostname(s) to configure in Nginx. Nginx is configured that it will set `FLOW_CONTEXT` to *Development* if it contains *dev* in its name, *Testing* if it contains *test*.
 
+Note: vhost `behat.dev.${NEOS_APP_NAME}"` is important one if you plan to run Behat test on that container (and you have set NEOS_APP_DO_INIT_TESTS to true). In addition, for that vhost, Nginx sets `Development/Behat` FLOW_CONTEXT (see [vhost.conf](container-files/build-typo3-neos/vhost.conf)).
+
 **NEOS_APP_SITE_PACKAGE**  
-Default: `NEOS_APP_SITE_PACKAGE=${NEOS_APP_SITE_PACKAGE:="TYPO3.NeosDemoTypo3Org"}`  
+Default: `NEOS_APP_SITE_PACKAGE=TYPO3.NeosDemoTypo3Org`  
 If you pre-installed custom TYPO3 Neos distribution, you'll probably want to replace this with your own site package available there. This site package will be installed and its content imported, if it's fresh install.
 
 **NEOS_APP_FORCE_SITE_REIMPORT**  
@@ -175,7 +195,7 @@ Set to true to execute `git pull` command inside Neos root directory (preceded b
 
 **NEOS_APP_FORCE_VHOST_CONF_UPDATE**  
 Default: `NEOS_APP_FORCE_VHOST_CONF_UPDATE=true`
-When TRUE, Nginx vhost file will be always overridden with the content from [vhost.conf](container-files/build-typo3-neos/vhost.conf) template. You might override it and keep together with your project files to keep in in sync. If you prefer manual updates, set it to FALSE.
+When TRUE (which is default), Nginx vhost file will be always overridden with the content from [vhost.conf](container-files/build-typo3-neos/vhost.conf) template. You might override it and keep together with your project files to keep in in sync. If you prefer manual updates, set it to FALSE.
 
 ## Authors
 

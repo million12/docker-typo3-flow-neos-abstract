@@ -28,26 +28,27 @@ echo
 
 # Internal variables
 CWD="/tmp"
-NEOS_DIR="typo3-neos"
+INSTALLED_PACKAGE_NAME="typo3-neos-package"
 
 cd $CWD
 
 # Clone Neos distribution from provided repository
-git clone $TYPO3_NEOS_REPO_URL $NEOS_DIR
-cd $NEOS_DIR
+git clone $TYPO3_NEOS_REPO_URL $INSTALLED_PACKAGE_NAME
+cd $INSTALLED_PACKAGE_NAME
 git log -10 --pretty=format:"%h %an %cr: %s" --graph
 
 # Do composer install
 git checkout $TYPO3_NEOS_VERSION
 COMPOSER_PROCESS_TIMEOUT=900 composer install $TYPO3_NEOS_COMPOSER_PARAMS
 
-# Run build.sh script if exists, with --preinstall param
-# It's OK to run is as root as it might need these privileges to install some global tools.
+# If the project contains executable build.sh in the root directory
+# it will be run during 'docker build' process. Note: it's OK to run is as root 
+# as it might need these privileges to install some global tools.
 if [[ -x "build.sh" ]]; then ./build.sh --preinstall; fi
 
 # Prepare tar archive and keep only it (remove neos dir)
 cd $CWD
-tar -zcf $NEOS_DIR.tgz $NEOS_DIR && rm -rf $NEOS_DIR
+tar -zcf $INSTALLED_PACKAGE_NAME.tgz $INSTALLED_PACKAGE_NAME && rm -rf $INSTALLED_PACKAGE_NAME
 
 echo
 echo "TYPO3 Neos $TYPO3_NEOS_VERSION installed."

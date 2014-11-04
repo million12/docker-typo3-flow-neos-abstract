@@ -200,3 +200,7 @@ When TRUE (which is default), Nginx vhost file will be always overridden with th
 ## Authors
 
 Author: Marcin Ryzycki (<marcin@m12.io>)  
+
+---
+
+**Sponsored by** [Typostrap.io - the new prototyping tool](http://typostrap.io/) for building highly-interactive prototypes of your website or web app. Built on top of TYPO3 Neos CMS and Zurb Foundation framework.

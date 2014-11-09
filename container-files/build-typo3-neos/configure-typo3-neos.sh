@@ -93,6 +93,12 @@ function install_typo3_neos() {
 
   log "Neos installed."
   cd $NEOS_ROOT
+  
+  # Make sure cache is cleared for all contexts. This is empty during the 1st container launch,
+  # but not clearing it when container re-starts can cause random issues.
+  rm -rf rm -rf Data/Temporary/*
+  
+  # Debug: show most recent git log messages
   git log -5 --pretty=format:"%h %an %cr: %s" --graph # Show most recent changes
   
   # If app is/was already installed, pull most recent code

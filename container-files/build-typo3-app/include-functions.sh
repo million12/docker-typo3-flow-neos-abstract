@@ -6,7 +6,8 @@
 #   String: value to log
 #######################################
 log() {
-  echo "=> ${NEOS_APP_NAME^^} APP: $@" >&2
+  if [ $@ ]; then echo "[${T3APP_NAME^^}] $@";
+  else echo; fi
 }
 
 #########################################################
@@ -31,23 +32,23 @@ function wait_for_db() {
 }
 
 #########################################################
-# Moves pre-installed in /tmp TYPO3 Neos to its
-# its target location ($NEOS_ROOT), if it's not there yet
+# Moves pre-installed in /tmp TYPO3 to its
+# target location ($APP_ROOT), if it's not there yet
 # Globals:
 #   WEB_SERVER_ROOT
-#   NEOS_ROOT
-#   NEOS_APP_NAME
+#   APP_ROOT
+#   T3APP_NAME
 #########################################################
-function install_typo3_neos() {
+function install_typo3_app() {
   # Check if app is already installed (when restaring stopped container)
-  if [ ! -d $NEOS_ROOT ]; then
-    log "Installing TYPO3 Neos (from pre-installed archive)..."
+  if [ ! -d $APP_ROOT ]; then
+    log "Installing TYPO3 app (from pre-installed archive)..."
     cd $WEB_SERVER_ROOT && tar -zxf /tmp/$INSTALLED_PACKAGE_NAME.tgz
-    mv $INSTALLED_PACKAGE_NAME $NEOS_APP_NAME
+    mv $INSTALLED_PACKAGE_NAME $T3APP_NAME
   fi
 
-  log "Neos installed."
-  cd $NEOS_ROOT
+  log "TYPO3 app installed."
+  cd $APP_ROOT
   
   # Make sure cache is cleared for all contexts. This is empty during the 1st container launch,
   # but not clearing it when container re-starts can cause random issues.
@@ -57,7 +58,7 @@ function install_typo3_neos() {
   git log -5 --pretty=format:"%h %an %cr: %s" --graph # Show most recent changes
   
   # If app is/was already installed, pull most recent code
-  if [ "${NEOS_APP_FORCE_PULL^^}" = TRUE ]; then
+  if [ "${T3APP_ALWAYS_DO_PULL^^}" = TRUE ]; then
     log "Resetting current working directory..."
     git status && git clean -f -d && git reset --hard # make the working dir clean
     log "Pulling the newest codebase..."
@@ -66,11 +67,11 @@ function install_typo3_neos() {
   fi
   
   # If composer.lock has changed, this will re-install things...
-  composer install $TYPO3_NEOS_COMPOSER_PARAMS
+  composer install $T3APP_BUILD_COMPOSER_PARAMS
 }
 
 #########################################################
-# Creates Neos database, if doesn't exist yet
+# Creates database for TYPO3 app, if doesn't exist yet
 # Globals:
 #   MYSQL_CMD_AUTH_PARAMS
 # Arguments:
@@ -78,7 +79,7 @@ function install_typo3_neos() {
 #########################################################
 function create_app_db() {
   local db_name=$@
-  log "Creating Neos db '$db_name' (if it doesn't exist yet)..."
+  log "Creating TYPO3 app database '$db_name' (if it doesn't exist yet)..."
   mysql $MYSQL_CMD_AUTH_PARAMS --execute="CREATE DATABASE IF NOT EXISTS $db_name CHARACTER SET utf8 COLLATE utf8_general_ci"
   log "DB created."
 }
@@ -86,7 +87,7 @@ function create_app_db() {
 #########################################################
 # Create Nginx vhost, if it doesn't exist yet
 # Globals:
-#   NEOS_ROOT
+#   APP_ROOT
 #   VHOST_FILE
 #   VHOST_SOURCE_FILE
 # Arguments:
@@ -101,14 +102,14 @@ function create_vhost_conf() {
   if [ ! -f $VHOST_FILE ]; then
     cat $VHOST_SOURCE_FILE > $VHOST_FILE
     log "New vhost file created."
-  # Vhost already exist, but NEOS_APP_FORCE_VHOST_CONF_UPDATE=true, so override it.
-  elif [ "${NEOS_APP_FORCE_VHOST_CONF_UPDATE^^}" = TRUE ]; then
+  # Vhost already exist, but T3APP_FORCE_VHOST_CONF_UPDATE=true, so override it.
+  elif [ "${T3APP_FORCE_VHOST_CONF_UPDATE^^}" = TRUE ]; then
     cat $VHOST_SOURCE_FILE > $VHOST_FILE
-    log "Vhost file updated (as NEOS_APP_FORCE_VHOST_CONF_UPDATE is TRUE)."
+    log "Vhost file updated (as T3APP_FORCE_VHOST_CONF_UPDATE is TRUE)."
   fi
 
   sed -i -r "s#%server_name%#${vhost_names}#g" $VHOST_FILE
-  sed -i -r "s#%root%#${NEOS_ROOT}#g" $VHOST_FILE
+  sed -i -r "s#%root%#${APP_ROOT}#g" $VHOST_FILE
   
   # Configure redirect: www to non-www
   # @TODO: make it configurable via env var
@@ -120,7 +121,7 @@ function create_vhost_conf() {
 }
 
 #########################################################
-# Update Neos Settings.yaml with db backend settings
+# Update TYPO3 app Settings.yaml with DB backend settings
 # Globals:
 #   SETTINGS_SOURCE_FILE
 #   DB_ENV_MARIADB_PASS
@@ -153,19 +154,19 @@ function create_settings_yaml() {
 }
 
 #########################################################
-# Check latest Neos doctrine:migration status.
-# Used to detect if this is fresh Neos installation
+# Check latest TYPO3 doctrine:migration status.
+# Used to detect if this is fresh installation
 # or re-run from previous state.
 #########################################################
 function get_latest_db_migration() {
-  log "Checking Neos db migration status..."
+  log "Checking TYPO3 db migration status..."
   local v=$(./flow doctrine:migrationstatus | grep -i 'Current Version' | awk '{print $4$5$6}')
   log "Last db migration: $v"
   echo $v
 }
 
 #########################################################
-# Do Neos doctrine:migrate
+# Provision database (i.e. doctrine:migrate)
 #########################################################
 function doctrine_update() {
   log "Doing doctrine:migrate..."
@@ -178,7 +179,7 @@ function doctrine_update() {
 #########################################################
 function create_admin_user() {
   log "Creating admin user..."
-  ./flow user:create --roles Administrator $NEOS_APP_USER_NAME $NEOS_APP_USER_PASS $NEOS_APP_USER_FNAME $NEOS_APP_USER_LNAME
+  ./flow user:create --roles Administrator $T3APP_USER_NAME $T3APP_USER_PASS $T3APP_USER_FNAME $T3APP_USER_LNAME
 }
 
 #########################################################
@@ -186,10 +187,10 @@ function create_admin_user() {
 # Arguments:
 #   String: site package name to install
 #########################################################
-function install_site_package() {
+function neos_site_package_install() {
   local site_package_name=$@
   if [ "${site_package_name^^}" = FALSE ]; then
-    log "Skipping installing site package (NEOS_APP_SITE_PACKAGE is set to FALSE)."
+    log "Skipping installing site package (T3APP_NEOS_SITE_PACKAGE is set to FALSE)."
   else
     log "Installing $site_package_name site package..."
     ./flow site:import --packageKey $site_package_name
@@ -200,7 +201,7 @@ function install_site_package() {
 # Prune all site data.
 # Used when re-importing the site package.
 #########################################################
-function prune_site_package() {
+function neos_site_package_prune() {
   log "Pruning old site..."
   ./flow site:prune --confirmation
   log "Done."
@@ -217,22 +218,22 @@ function warmup_cache() {
 }
 
 #########################################################
-# Set correct permission for Neos app
+# Set correct permission for TYPO3 app
 #########################################################
 function set_permissions() {
-  chown -R www:www $NEOS_ROOT
+  chown -R www:www $APP_ROOT
 }
 
 #########################################################
-# If the installed TYPO3 Neos distribution contains
-# executable ./build.sh file, it will run it.
-# This script should do all necessary steps to make
+# If the installed TYPO3 app contains
+# executable $T3APP_USER_BUILD_SCRIPT file, it will run it.
+# This script can be used to do all necessary steps to make
 # the site up&running, e.g. compile CSS.
 #########################################################
 function user_build_script() {
-  cd $NEOS_ROOT;
-  if [[ -x $NEOS_USER_BUILD_SCRIPT ]]; then
+  cd $APP_ROOT;
+  if [[ -x $T3APP_USER_BUILD_SCRIPT ]]; then
     # Run ./build.sh script as 'www' user
-    su www -c "./$NEOS_USER_BUILD_SCRIPT"
+    su www -c $T3APP_USER_BUILD_SCRIPT
   fi
 }

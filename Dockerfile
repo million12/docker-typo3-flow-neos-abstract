@@ -25,4 +25,4 @@ ADD container-files /
 #   echo "IdentityFile /gh-repo-key" >> /etc/ssh/ssh_config
 #
 # In your image based on this one you will have to run this script:
-#RUN . /build-typo3-neos/pre-install-typo3-neos.sh
+#RUN . /build-typo3-app/pre-install-typo3-app.sh

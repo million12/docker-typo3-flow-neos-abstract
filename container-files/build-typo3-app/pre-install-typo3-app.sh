@@ -28,7 +28,7 @@ echo
 
 # Internal variables
 CWD="/tmp"
-INSTALLED_PACKAGE_NAME="typo3-neos-package"
+INSTALLED_PACKAGE_NAME="typo3-app-package"
 
 cd $CWD
 

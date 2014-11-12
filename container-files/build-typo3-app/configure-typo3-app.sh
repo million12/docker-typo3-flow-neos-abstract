@@ -31,8 +31,8 @@ TYPO3_NEOS_COMPOSER_PARAMS=${TYPO3_NEOS_COMPOSER_PARAMS:="--optimize-autoloader"
 
 
 # Internal variables - there is no need to change them
-CWD=$(pwd) # Points to /build-typo3-neos/ directory, where this script is located
-INSTALLED_PACKAGE_NAME="typo3-neos-package" # Pre-installed /tmp/INSTALLED_PACKAGE_NAME.tgz
+CWD=$(pwd) # Points to /build-typo3-app/ directory, where this script is located
+INSTALLED_PACKAGE_NAME="typo3-app-package" # Pre-installed /tmp/INSTALLED_PACKAGE_NAME.tgz
 WEB_ROOT="/data/www"
 NEOS_ROOT="${WEB_ROOT}/${NEOS_APP_NAME}"
 SETTINGS_SOURCE_FILE="${CWD}/Settings.yaml"

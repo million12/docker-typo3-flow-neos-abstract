@@ -20,7 +20,7 @@ NEOS_APP_USER_PASS=${NEOS_APP_USER_PASS:="password"}
 NEOS_APP_USER_FNAME=${NEOS_APP_USER_FNAME:="Admin"}
 NEOS_APP_USER_LNAME=${NEOS_APP_USER_LNAME:="User"}
 NEOS_APP_VHOST_NAMES=${NEOS_APP_VHOST_NAMES:="${NEOS_APP_NAME} dev.${NEOS_APP_NAME} behat.dev.${NEOS_APP_NAME}"}
-NEOS_APP_SITE_PACKAGE=${NEOS_APP_SITE_PACKAGE:="TYPO3.NeosDemoTypo3Org"}
+NEOS_APP_SITE_PACKAGE=${NEOS_APP_SITE_PACKAGE:=false}
 NEOS_APP_FORCE_PULL=${NEOS_APP_FORCE_PULL:=false}
 NEOS_APP_FORCE_SITE_REIMPORT=${NEOS_APP_FORCE_SITE_REIMPORT:=false}
 NEOS_APP_FORCE_VHOST_CONF_UPDATE=${NEOS_APP_FORCE_VHOST_CONF_UPDATE:=true}
@@ -233,8 +233,12 @@ function create_admin_user() {
 #########################################################
 function install_site_package() {
   local site_package_name=$@
-  log "Installing $site_package_name site package..."
-  ./flow site:import --packageKey $site_package_name
+  if [ "${site_package_name^^}" = FALSE ]; then
+    log "Skipping installing site package (NEOS_APP_SITE_PACKAGE is set to FALSE)."
+  else
+    log "Installing $site_package_name site package..."
+    ./flow site:import --packageKey $site_package_name
+  fi
 }
 
 #########################################################

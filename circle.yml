@@ -22,7 +22,7 @@ test:
   pre:
     # Build million12/typo3-neos-abstract image
     - docker build -t million12/typo3-neos-abstract .
-    # Build million12/typo3-neos, actual image which will run TYPO3 Neos
+    # Build million12/typo3-neos, actual image which working TYPO3 Neos
     - git clone https://github.com/million12/docker-typo3-neos.git
     - docker build -t million12/typo3-neos docker-typo3-neos/
 

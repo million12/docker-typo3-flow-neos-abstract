@@ -182,8 +182,10 @@ Hostname(s) to configure in Nginx. Nginx is configured that it will set `FLOW_CO
 Note: vhost `behat.dev.${NEOS_APP_NAME}"` is important one if you plan to run Behat test on that container (and you have set NEOS_APP_DO_INIT_TESTS to true). In addition, for that vhost, Nginx sets `Development/Behat` FLOW_CONTEXT (see [vhost.conf](container-files/build-typo3-neos/vhost.conf)).
 
 **NEOS_APP_SITE_PACKAGE**  
-Default: `NEOS_APP_SITE_PACKAGE=TYPO3.NeosDemoTypo3Org`  
-If you pre-installed custom TYPO3 Neos distribution, you'll probably want to replace this with your own site package available there. This site package will be installed and its content imported, if it's fresh install.
+Default: `NEOS_APP_SITE_PACKAGE=false`
+The default value is FALSE which means site package will not be installed unless you specify one. For default Base distribution you would specify here `TYPO3.NeosDemoTypo3Org` value. For your own distribution specify your custom site package.
+
+When this value is specified, the site package will be installed and its content imported (if it is a fresh installation and). If you want to re-install / re-import the site content even if it was already installed, set `NEOS_APP_FORCE_SITE_REIMPORT=true` (see below).
 
 **NEOS_APP_FORCE_SITE_REIMPORT**  
 Default: `NEOS_APP_FORCE_SITE_REIMPORT=false`  

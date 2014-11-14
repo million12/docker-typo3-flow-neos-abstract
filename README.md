@@ -191,7 +191,7 @@ When this value is specified, the site package will be installed and its content
 
 **T3APP_NEOS_SITE_PACKAGE_FORCE_REIMPORT**  
 Default: `T3APP_NEOS_SITE_PACKAGE_FORCE_REIMPORT=false`  
-Set to true to prune (`./flow site:prune`) and re-import ('./flow site:import ...`) site content each time container starts. Useful if you keep your Sites.xml versioned and in sync.
+Set to true to prune (`./flow site:prune`) and re-import (`./flow site:import ...`) site content each time container starts. Useful if you keep your Sites.xml versioned and in sync.
 
 **T3APP_ALWAYS_DO_PULL**  
 Default: `T3APP_ALWAYS_DO_PULL=false`  

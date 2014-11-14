@@ -6,7 +6,7 @@
 #   String: value to log
 #######################################
 log() {
-  if [ $@ ]; then echo "[${T3APP_NAME^^}] $@";
+  if [[ "$@" ]]; then echo "[${T3APP_NAME^^}] $@";
   else echo; fi
 }
 
@@ -158,10 +158,8 @@ function create_settings_yaml() {
 # Used to detect if this is fresh installation
 # or re-run from previous state.
 #########################################################
-function get_latest_db_migration() {
-  log "Checking TYPO3 db migration status..."
-  local v=$(./flow doctrine:migrationstatus | grep -i 'Current Version' | awk '{print $4$5$6}')
-  log "Last db migration: $v"
+function get_db_executed_migrations() {
+  local v=$(./flow doctrine:migrationstatus | grep -i 'Executed Migrations' | awk '{print $4$5}')
   echo $v
 }
 
@@ -236,4 +234,47 @@ function user_build_script() {
     # Run ./build.sh script as 'www' user
     su www -c $T3APP_USER_BUILD_SCRIPT
   fi
+}
+
+#########################################################
+# Get virtual host name used for Behat testing.
+# This host name has in format 'behat.dev.[BASE_DOMAIN]' 
+# We relay on the fact that Nginx is configured that
+# it sets FLOW_CONTEXT to Development when 'dev' string
+# is detected in hostname and respectively
+# Development/Behat if 'behat' string is detected.
+# Globals:
+#   T3APP_VHOST_NAMES: all vhost name(s), space-separated  
+#########################################################
+function behat_get_vhost() {
+  behat_vhost=""
+  for vhost in $T3APP_VHOST_NAMES; do
+    if [[ $vhost == *behat* ]]; then
+      behat_vhost=$vhost
+    fi
+  done
+  
+  echo $behat_vhost
+}
+
+#########################################################
+# Iterate through all installed packages in Packages/
+# look up for */Tests/Behavior/behat.yml[.dist] files 
+# and set there behat vhost in base_url: variable.
+# Arguments:
+#   String: vhost used for Behat tests
+#########################################################
+function behat_configure_yml_files() {
+  local behat_vhost=$@
+
+  cd $APP_ROOT;
+  for f in Packages/*/*/Tests/Behavior/behat.yml.dist; do
+    target_file=${f/.dist/}
+    if [ ! -f $target_file ]; then
+      cp $f $target_file
+    fi
+    # Find all base_url: setting (might be commented out) and replace it with $behat_vhost
+    sed -i -r "s/(#\s?)?base_url:.+/base_url: http:\/\/${behat_vhost}\//g" $target_file
+    log "$target_file configured for Behat testing."
+  done
 }

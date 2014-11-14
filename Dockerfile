@@ -5,7 +5,7 @@ MAINTAINER Marcin Ryzycki marcin@m12.io
 ADD container-files /
 
 #
-# This is "abstract" image and it doesn't do anything on its own.
+# This is "abstract" million12/typo3-flow-neos-abstract image and it doesn't do anything on its own.
 # It is designed to easily build sub-images which will run any TYPO3 Flow and/or Neos version.
 # See README.md for more information.
 #

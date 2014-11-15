@@ -135,7 +135,6 @@ test:
 
 
   post:
-    - docker run --volumes-from=db busybox:latest ls -al /var/lib/mysql/
-    - docker run --volumes-from=db busybox:latest ls -al /var/log/
+    - docker run --volumes-from=db busybox:latest ls -al /var/lib/mysql/ /var/log/
     - docker run --volumes-from=db busybox:latest cat /var/log/mysql.log
     - docker run --volumes-from=db busybox:latest cat /var/log/mysql.err

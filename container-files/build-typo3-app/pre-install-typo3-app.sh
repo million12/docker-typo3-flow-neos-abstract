@@ -28,10 +28,10 @@ cd $CWD
 # Clone TYPO3 app code from provided repository
 git clone $T3APP_BUILD_REPO_URL $INSTALLED_PACKAGE_NAME
 cd $INSTALLED_PACKAGE_NAME
-git log -10 --pretty=format:"%h %an %cr: %s" --graph
 
 # Do composer install
 git checkout $T3APP_BUILD_BRANCH
+git log -10 --pretty=format:"%h %an %cr: %s" --graph
 COMPOSER_PROCESS_TIMEOUT=900 composer install $T3APP_BUILD_COMPOSER_PARAMS
 
 # If the project contains executable build.sh in the root directory

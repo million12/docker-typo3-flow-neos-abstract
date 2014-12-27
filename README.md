@@ -197,7 +197,7 @@ Neos installation only. Set to true to prune (`./flow site:prune`) and re-import
 
 **T3APP_ALWAYS_DO_PULL**  
 Default: `T3APP_ALWAYS_DO_PULL=false`  
-Set to true to execute `git pull` command inside Neos root directory (preceded by git clean/reset to avoid any potential conflicts). This might be useful to ensure fresh/latest codebase of your app, even if the pre-installed image version is a bit outdated. Note: if you provided `T3APP_BUILD_BRANCH` which is not a branch but a tag, the pull will fail.
+When *true*, the newest codebase will be pulled using `git pull` when container starts (preceeded by `git clean, git reset` to avoid any potential conflicts). It is *false* by default as it seems to be more safe during development to avoid loosing any code changes, but it's useful to set it to *true* to ensure fresh/latest codebase of your app. Note: if you provided `T3APP_BUILD_BRANCH` which is not a *branch* but a *tag*, the pull will fail.
 
 **T3APP_FORCE_VHOST_CONF_UPDATE**  
 Default: `T3APP_FORCE_VHOST_CONF_UPDATE=true`

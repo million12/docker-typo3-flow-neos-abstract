@@ -278,3 +278,30 @@ function behat_configure_yml_files() {
     log "$target_file configured for Behat testing."
   done
 }
+
+
+#########################################################
+# Configure environment (e.g. PATH).
+# Configure .bash_profile for 'www' user with all 
+# necessary scripts/settings like /etc/hosts settings.
+# Globals:
+#   APP_ROOT
+#   BASH_RC_FILE
+#   BASH_RC_SOURCE_FILE
+#   CONTAINER_IP
+#   T3APP_BUILD_BRANCH
+#   T3APP_VHOST_NAMES
+#   T3APP_NAME
+#########################################################
+function configure_env() {
+  # Add T3APP_VHOST_NAMES to /etc/hosts inside this container
+  echo "127.0.0.1 $T3APP_VHOST_NAMES" | tee -a /etc/hosts
+
+  # Copy .bash_profile and substitute all necessary variables
+  cat $BASH_RC_SOURCE_FILE > $BASH_RC_FILE && chown www:www $BASH_RC_FILE
+  sed -i -r "s#%CONTAINER_IP%#${CONTAINER_IP}#g" $BASH_RC_FILE
+  sed -i -r "s#%APP_ROOT%#${APP_ROOT}#g" $BASH_RC_FILE
+  sed -i -r "s#%T3APP_BUILD_BRANCH%#${T3APP_BUILD_BRANCH}#g" $BASH_RC_FILE
+  sed -i -r "s#%T3APP_NAME%#${T3APP_NAME}#g" $BASH_RC_FILE
+  sed -i -r "s#%T3APP_VHOST_NAMES%#${T3APP_VHOST_NAMES}#g" $BASH_RC_FILE
+}

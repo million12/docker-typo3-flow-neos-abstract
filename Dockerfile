@@ -1,3 +1,6 @@
+#
+# million12/typo3-flow-neos-abstract
+#
 FROM million12/php-app:latest
 MAINTAINER Marcin Ryzycki marcin@m12.io
 

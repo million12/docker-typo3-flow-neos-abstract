@@ -49,7 +49,7 @@ log && log "Detected installation type: ${INSTALLATION_TYPE^^}."
 # Regular TYPO3 app initialisation
 # 
 if [ "${T3APP_DO_INIT^^}" = TRUE ]; then
-  log "Configuring TYPO3 app..." && log
+  log "Configuring TYPO3 ${INSTALLATION_TYPE^^} app..." && log
   
   create_app_db $T3APP_DB_NAME
   create_settings_yaml "Configuration/Settings.yaml" $T3APP_DB_NAME
@@ -59,10 +59,10 @@ if [ "${T3APP_DO_INIT^^}" = TRUE ]; then
   log "DB executed migrations: $executed_migrations"
   
   if [[ $executed_migrations == 0 ]]; then
-    log "Fresh installation detected: making DB migration:"
+    log "Fresh ${INSTALLATION_TYPE^^} installation detected: making DB migration:"
     doctrine_update
   else
-    log "TYPO3 app database already provisioned, skipping..."
+    log "TYPO3 ${INSTALLATION_TYPE^^} app database already provisioned, skipping..."
   fi
 
   # TYPO3 Neos steps only:
@@ -91,10 +91,11 @@ fi
 # Initialise TYPO3 app for running test
 # 
 if [ "${T3APP_DO_INIT_TESTS^^}" = TRUE ]; then
-  log "Configuring TYPO3 app for testing..." && log
+  log && log "Configuring TYPO3 ${INSTALLATION_TYPE^^} app for Behat testing:"
   
   # @TODO: is there anything to do here when Behat is not available? Not sure...
-  # Seems like functional tests can run without any extra configuration in Testing context.
+  # Functional tests can run without any extra configuration in Testing context
+  # so it seems like special care is only needed for Behat testing.
 
   # Only proceed with Behat setup if it is available...
   if [[ $(./flow help | grep "behat:setup") ]]; then
@@ -122,6 +123,9 @@ if [ "${T3APP_DO_INIT_TESTS^^}" = TRUE ]; then
     ./flow behat:setup
     # Warm-up caches
     warmup_cache "Development/Behat"
+  else
+    log "NOTICE: package 'flowpack/behat' seems to be missing but it's required to set up Behat testing."
+    log "Please add '\"flowpack/behat\": \"dev-master\"' to your composer.json and start the container again." && log
   fi
 fi
 # Initialise TYPO3 app for running test (END)

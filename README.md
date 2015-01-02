@@ -155,11 +155,15 @@ When set to TRUE (default), TYPO3 app will be fully configured and set up, incl.
 
 **T3APP_DO_INIT_TESTS**  
 Default: `T3APP_DO_INIT_TESTS=false`  
-When set to TRUE, TYPO3 app will be prepared to run unit, functional and behavioral (if avail.) tests out of the box. If you set this option, you have to define vhost behat.dev.[your-base-domain] in *T3APP_VHOST_NAMES* variable. This so-called "Behat vhost" will be configured in all behat.yml files across all packages and will be used for Behat testing.
+Configure TYPO3 app for running Behat tests. You need to have `flowpack/behat` installed in your `composer.json`.
 
-When this is set to TRUE, an empty database for testing is created, **Development/Behat** and **Testing/Behat** contexts are configured, all `Packages/*/*/Tests/Behavior/behat.yml.dist` are copied to `behat.yml`, with `base_url:` option set to *Behat vhost*. In addition, `./flow behat:setup` command will be run to prepare all necessary dependencies for running the tests.
+When you set this option to TRUE, you have to add extra vhost in format `behat.dev.[your-base-domain]` in *T3APP_VHOST_NAMES* variable. This so-called "Behat vhost" will be added to all behat.yml files across all packages and will be used for Behat testing; also it will be used to set proper `FLOW_CONTEXT` for that vhost.
 
-For an example how to run all test suites included in TYPO3 Neos, see the [million12/behat-selenium](https://github.com/million12/docker-behat-selenium) repository.
+When this option is set to TRUE, an empty database for Behat testing is created and configured for **Development/Behat** and **Testing/Behat** contexts, all `Packages/*/*/Tests/Behavior/behat.yml.dist` are copied to `behat.yml`, with `base_url:` option set to *Behat vhost*. In addition, `./flow behat:setup` command will be run to prepare all necessary dependencies for running the tests.
+
+Note: You *don't* have to set this option to run unit and/or functional tests. Unit and functional tests work out of the box (technical background: functional tests run in `Testing` context, which is out-of-box configured to use `pdo_sqlite` with in-memory tables).
+
+For an example how to run all Behat test suites included in TYPO3 Neos, see the [circle.yml](circle.yml) which contains example of running Behat tests.
 
 **T3APP_NAME**  
 Default: `T3APP_NAME=typo3-app`  

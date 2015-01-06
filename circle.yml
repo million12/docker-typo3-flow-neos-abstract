@@ -18,20 +18,20 @@ dependencies:
   pre:
     - docker info && docker version
     # Cache some Docker images to make builds faster
-    - mkdir -p ~/docker/tutum ~/docker/million12
-    # Cache tutum/mariadb
-    - if [[ -e ~/docker/tutum/mariadb.tar ]]; then docker load -i ~/docker/tutum/mariadb.tar; else docker pull tutum/mariadb:latest && docker save tutum/mariadb > ~/docker/tutum/mariadb.tar; fi
+    - mkdir -p ~/docker/million12
+    # Cache million12/mariadb
+    - if [[ -e ~/docker/million12/mariadb.tar ]]; then docker load -i ~/docker/million12/mariadb.tar; else docker pull million12/mariadb:latest && docker save million12/mariadb > ~/docker/million12/mariadb.tar; fi
     # Cache million12/php-app - base for million12/typo3-flow-neos-abstract and million12/behat-selenium
     - if [[ -e ~/docker/million12/php-app.tar ]]; then docker load -i ~/docker/million12/php-app.tar; else docker pull million12/php-app:latest && docker save million12/php-app > ~/docker/million12/php-app.tar; fi
 
   override:
-    - docker pull tutum/mariadb:latest
+    - docker pull million12/mariadb:latest
     - docker pull million12/php-app:latest
 #    - docker pull million12/behat-selenium:latest
     
   post:
     # Launch DB backend
-    - docker run -d --name=db -v /var/log --env="MARIADB_PASS=my-pass" tutum/mariadb
+    - docker run -d --name=db -v /var/log --env="MARIADB_PASS=my-pass" million12/mariadb
     - docker logs -f db | tee -a ${CIRCLE_ARTIFACTS}/docker-db.log:
         background: true
     # Build abstract million12/typo3-flow-neos-abstract image
@@ -123,9 +123,3 @@ test:
     
     # Clean up
     - docker rm -f neos-testing || true
-
-
-  post:
-    - docker run --volumes-from=db busybox:latest ls -al /var/lib/mysql/ /var/log/
-    - docker run --volumes-from=db busybox:latest cat /var/log/mysql.log
-    - docker run --volumes-from=db busybox:latest cat /var/log/mysql.err

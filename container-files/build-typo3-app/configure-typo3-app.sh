@@ -54,10 +54,12 @@ if [ "${T3APP_DO_INIT^^}" = TRUE ]; then
   create_app_db $T3APP_DB_NAME
   create_settings_yaml "Configuration/Settings.yaml" $T3APP_DB_NAME
   
-  # Only proceed with doctrine:migration it is a fresh installation...
+  # DB migration: where are we? Also export it so site build script can access to that info.
   executed_migrations=$(get_db_executed_migrations)
+  export RUNTIME_EXECUTED_MIGRATIONS=$executed_migrations
   log "DB executed migrations: $executed_migrations"
   
+  # Only proceed with doctrine:migration it is a fresh installation...
   if [[ $executed_migrations == 0 ]]; then
     log "Fresh ${INSTALLATION_TYPE^^} installation detected: making DB migration:"
     doctrine_update

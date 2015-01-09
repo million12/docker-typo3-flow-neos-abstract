@@ -249,6 +249,18 @@ case $@ in
 esac
 ```
 
+### Other (runtime/internal) variables
+
+These are variables which are set internally when container starts. You might want to use them e.g. inside your site's build script (see `T3APP_USER_BUILD_SCRIPT` env var).
+
+**RUNTIME_EXECUTED_MIGRATIONS**  
+Contains number of executed db migrations (from `flow doctrine:migrationstatus`). Useful to detect fresh installs in site's build script.
+```
+if [[ $RUNTIME_EXECUTED_MIGRATIONS == 0 ]]; then
+    do_something
+fi
+```
+
 ## Authors
 
 Author: Marcin Ryzycki (<marcin@m12.io>)  

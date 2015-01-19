@@ -16,18 +16,16 @@ log() {
 #########################################################
 function wait_for_db() {
   set +e
-  local RET=1
-  while [[ RET -ne 0 ]]; do
+  local res=1
+  while [[ $res -ne 0 ]]; do
     mysql $MYSQL_CMD_AUTH_PARAMS --execute "status" > /dev/null 2>&1
-    RET=$?
-    if [[ RET -ne 0 ]]; then
-      log "Waiting for DB service..."
-      sleep 2
-    fi
+    res=$?
+    if [[ $res -ne 0 ]]; then log "Waiting for DB service..." && sleep 2; fi
   done
   set -e
   
   # Display DB status...
+  log "Database status:"
   mysql $MYSQL_CMD_AUTH_PARAMS --execute "status"
 }
 

@@ -45,28 +45,59 @@ function install_typo3_app() {
     mv $INSTALLED_PACKAGE_NAME $T3APP_NAME
   fi
 
-  log "TYPO3 app installed."
   cd $APP_ROOT
   
   # Make sure cache is cleared for all contexts. This is empty during the 1st container launch,
-  # but not clearing it when container re-starts can cause random issues.
+  # but, when container is re-run (with shared data volume), not clearing it can cause random issues
+  # (e.g. due to changes in the newly pulled code).
   rm -rf rm -rf Data/Temporary/*
   
   # Debug: show most recent git log messages
-  git log -5 --pretty=format:"%h %an %cr: %s" --graph # Show most recent changes
+  log "TYPO3 app installed. Most recent commits:"
+  git log -5 --pretty=format:"%h %an %cr: %s" --graph && echo # Show most recent changes
   
-  # If app is/was already installed, pull most recent code
+  # If app is/was already installed, pull the most recent code
   if [ "${T3APP_ALWAYS_DO_PULL^^}" = TRUE ]; then
-    log "Resetting current working directory..."
-    git status && git clean -f -d && git reset --hard # make the working dir clean
-    log "Pulling the newest codebase..."
-    git pull
-    git log -10 --pretty=format:"%h %an %cr: %s" --graph
+    install_typo3_app_do_pull
   fi
   
   # If composer.lock has changed, this will re-install things...
   composer install $T3APP_BUILD_COMPOSER_PARAMS
 }
+
+#########################################################
+# Pull the newest codebase from the remote repository.
+# It tries to handle the situation even when they are
+# conflicting changes.
+#
+# Called when T3APP_ALWAYS_DO_PULL is set to TRUE.
+#
+# Globals:
+#   WEB_SERVER_ROOT
+#   APP_ROOT
+#   T3APP_NAME
+#########################################################
+function install_typo3_app_do_pull() {
+  set +e # allow non-zero command results (git pull might fail due to code conflicts)
+  log "Pulling the newest codebase (due to T3APP_ALWAYS_DO_PULL set to TRUE)..."
+
+  if [[ ! $(git status | grep "working directory clean") ]]; then
+    log "There are some changes in the current working directory. Stashing..."
+    git status
+    git stash --include-untracked
+  fi
+  
+  if [[ ! $(git pull -f) ]]; then
+    log "git pull failed. Trying once again with 'git reset --hard origin/${T3APP_BUILD_BRANCH}'..."
+    git reset --hard origin/$T3APP_BUILD_BRANCH
+  fi
+  
+  log "Most recent commits (after newest codebase has been pulled):"
+  git log -10 --pretty=format:"%h %an %cr: %s" --graph
+  
+  set -e # restore -e setting
+}
+
 
 #########################################################
 # Creates database for TYPO3 app, if doesn't exist yet
@@ -290,8 +321,14 @@ function behat_configure_yml_files() {
 #   T3APP_BUILD_BRANCH
 #   T3APP_VHOST_NAMES
 #   T3APP_NAME
+#   T3APP_USER_NAME
 #########################################################
 function configure_env() {
+  # Configure git, so git stash/pull always works. Otherwise git shouts about missing configuration.
+  # Note: the actual values doesn't matter, most important is that they are configured.
+  git config --global user.email "${T3APP_USER_NAME}@local"
+  git config --global user.name $T3APP_USER_NAME
+
   # Add T3APP_VHOST_NAMES to /etc/hosts inside this container
   echo "127.0.0.1 $T3APP_VHOST_NAMES" | tee -a /etc/hosts
 

@@ -13,6 +13,21 @@ The image is designed that after running a container from it, you'll get working
 
 The configuration script tries to detect if it is a Flow or Neos installation. It simply test main `composer.json` for `typo3/neos` string and, if it is found, sets the installation type to `neos`. See [configure-typo3-app.sh](container-files/build-typo3-app/configure-typo3-app.sh) for details (look for `INSTALLATION_TYPE` variable).
 
+## Host names, FLOW_CONTEXT environment and testing
+
+Be aware that, by default, **`FLOW_CONTEXT` variable is set based on virtual host name** (i.e. Produciton, Development, Testing).
+
+The rules are:
+* when vhost contains `dev` in its name, `FLOW_CONTEXT=Development`.
+* when vhost contains `dev` and `behat` in its name, `FLOW_CONTEXT=Developmnet/Behat`
+* all other cases: `FLOW_CONTEXT=Production`.
+
+With that it's easy to use the [default provided Nginx configuration](container-files/build-typo3-app/vhost.conf) and have your production website on `site.com` domain, `dev.site.com` for your developers and possibly e.g. `behat.dev.site.com` to run Behat tests. 
+
+With this container, you can run all TYPO3 tests, including Behat tests which requires Selenium server. There is an ENV variable **T3APP_DO_INIT_TESTS** to make this process painless. When T3APP_DO_INIT_TESTS=true, testing environment and database will be created/configured. See the section about env variables below for more info.
+
+For the example how to run test suites included in TYPO3 Neos using this container, see the [million12/behat-selenium](https://github.com/million12/docker-behat-selenium) repository. For even more info see the [TYPO3 Neos testing documentation](http://docs.typo3.org/neos/TYPO3NeosDocumentation/DeveloperGuide/Testing/Index.html) website.
+
 ## Usage
 
 As it's shown in [million12/typo3-neos](https://github.com/million12/docker-typo3-neos), you can build your own TYPO3 Neos image with following Dockerfile:
@@ -38,12 +53,6 @@ RUN . /build-typo3-app/pre-install-typo3-neos.sh
 This will pre-install default TYPO3 Neos distribution, version 1.1.2. Uncomment and provide custom `ENV T3APP_BUILD_REPO_URL` to install your own distribution.
 
 See [README.md](https://github.com/million12/docker-typo3-neos/README.md) from [million12/typo3-neos](https://github.com/million12/docker-typo3-neos) for more information about how to run all required containers (e.g. MariaDB) and have working instance of TYPO3 Neos.
-
-### Testing
-
-With this container, you can run all TYPO3 tests, including Behat tests which requires Selenium server. There is an ENV variable **T3APP_DO_INIT_TESTS** to make this process painless. When T3APP_DO_INIT_TESTS=true, testing environment and database will be created/configured.
-
-For an example how to run test suites included in TYPO3 Neos, see the [million12/behat-selenium](https://github.com/million12/docker-behat-selenium) repository.
 
 ## How does it work
 

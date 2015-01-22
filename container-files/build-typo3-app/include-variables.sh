@@ -12,10 +12,10 @@ T3APP_BUILD_COMPOSER_PARAMS=${T3APP_BUILD_COMPOSER_PARAMS:="--dev --prefer-sourc
 ###############################################
 # ENV variables used during container runtime
 ###############################################
+
 T3APP_DO_INIT=${T3APP_DO_INIT:=true}
 T3APP_DO_INIT_TESTS=${T3APP_DO_INIT_TESTS:=false}
 T3APP_NAME=${T3APP_NAME:="typo3-app"}
-T3APP_DB_NAME=${T3APP_DB_NAME:=${T3APP_NAME//[^a-zA-Z0-9]/_}} # just in case replace with _ all non-allowed in DB name characters
 T3APP_USER_NAME=${T3APP_USER_NAME:="admin"}
 T3APP_USER_PASS=${T3APP_USER_PASS:="password"}
 T3APP_USER_FNAME=${T3APP_USER_FNAME:="Admin"}
@@ -25,6 +25,14 @@ T3APP_NEOS_SITE_PACKAGE=${T3APP_NEOS_SITE_PACKAGE:=false}
 T3APP_NEOS_SITE_PACKAGE_FORCE_REIMPORT=${T3APP_NEOS_SITE_PACKAGE_FORCE_REIMPORT:=false}
 T3APP_ALWAYS_DO_PULL=${T3APP_ALWAYS_DO_PULL:=false}
 T3APP_FORCE_VHOST_CONF_UPDATE=${T3APP_FORCE_VHOST_CONF_UPDATE:=true}
+
+# Database ENV variables
+# Note: all DB_* variables are created by Docker when linking this container with MariaDB container (e.g. tutum/mariadb, million12/mariadb) with --link=mariadb-container-id:db option. 
+T3APP_DB_HOST=${T3APP_DB_HOST:=${DB_PORT_3306_TCP_ADDR:="db"}}      # 1st take T3APP_DB_HOST, then DB_PORT_3306_TCP_ADDR (linked db container), then fallback to 'db' host
+T3APP_DB_PORT=${T3APP_DB_PORT:=${DB_PORT_3306_TCP_PORT:="3306"}}    # 1st take T3APP_DB_PORT, then DB_PORT_3306_TCP_PORT (linked db container), then fallback to the default '3306' port
+T3APP_DB_USER=${T3APP_DB_USER:=${DB_ENV_MARIADB_USER:="admin"}}     # 1st take T3APP_DB_USER, then DB_ENV_MARIADB_USER (linked db container), then fallback to the default 'admin' user
+T3APP_DB_PASS=${T3APP_DB_PASS:=${DB_ENV_MARIADB_PASS:="password"}}  # 1st take T3APP_DB_PASS, then DB_ENV_MARIADB_PASS (linked db container), then fallback to dummy pass
+T3APP_DB_NAME=${T3APP_DB_NAME:=${T3APP_NAME//[^a-zA-Z0-9]/_}}       # DB name: Fallback to T3APP_NAME if not provided. Replace all non-allowed in DB identifiers with '_' char
 
 # Script relative to $APP_ROOT directory - if found there and it's executable,
 # will be called at the end of the setup process.

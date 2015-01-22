@@ -10,6 +10,9 @@ machine:
     typo3-app: 127.0.0.1
     flow: 127.0.0.1
     neos: 127.0.0.1
+  environment:
+    DB_USER: db-user
+    DB_PASS: db-password
 
 dependencies:
   cache_directories:
@@ -19,30 +22,24 @@ dependencies:
     - docker info && docker version
     # Cache some Docker images to make builds faster
     - mkdir -p ~/docker/million12
-    # Cache million12/mariadb
+    # Cache images
     - if [[ -e ~/docker/million12/mariadb.tar ]]; then docker load -i ~/docker/million12/mariadb.tar; else docker pull million12/mariadb:latest && docker save million12/mariadb > ~/docker/million12/mariadb.tar; fi
-    # Cache million12/php-app - base for million12/typo3-flow-neos-abstract and million12/behat-selenium
     - if [[ -e ~/docker/million12/php-app.tar ]]; then docker load -i ~/docker/million12/php-app.tar; else docker pull million12/php-app:latest && docker save million12/php-app > ~/docker/million12/php-app.tar; fi
-
-  override:
     - docker pull million12/mariadb:latest
     - docker pull million12/php-app:latest
-#    - docker pull million12/behat-selenium:latest
-    
-  post:
+    - docker pull million12/behat-selenium:latest
+  
+  override:
     # Launch DB backend
-    - docker run -d --name=db -v /var/log --env="MARIADB_PASS=my-pass" million12/mariadb
+    - docker run -d --name=db --env="MARIADB_USER=$DB_USER" --env="MARIADB_PASS=$DB_PASS" million12/mariadb
     - docker logs -f db | tee -a ${CIRCLE_ARTIFACTS}/docker-db.log:
         background: true
+  
     # Build abstract million12/typo3-flow-neos-abstract image
     - docker build -t million12/typo3-flow-neos-abstract .
 
 # Run tests
 test:
-  pre:
-    - docker logs db && docker inspect db # Temporary - to investigate some random issues with this container...
-    - docker ps
-    
   override:
     # ##################################################
     # Build TYPO3 Flow container and do some basic tests
@@ -75,11 +72,18 @@ test:
     
     
     # ##################################################
-    # Build TYPO3 Neos container and do some basic tests
+    # Build TYPO3 Neos container and do some basic front-end tests
+    # Also test agains custom DB params (ie. hostname, user, pass)
     # ##################################################
     - docker build --tag=test/typo3-neos Tests/Neos/
-    # Launch it with default ENV variables
-    - docker run -d --name=neos -p=8100:80 --link=db:db --env="T3APP_NAME=neos" test/typo3-neos
+    - | 
+      docker run -d --name=neos -p=8100:80 --link=db:db.local \
+        --env="T3APP_NAME=neos" \
+        --env="T3APP_DB_HOST=db.local" \
+        --env="T3APP_DB_USER=$DB_USER" \
+        --env="T3APP_DB_PASS=$DB_PASS" \
+        --env="T3APP_DB_NAME=my_db_name" \
+        test/typo3-neos
     - docker logs -f neos > ${CIRCLE_ARTIFACTS}/docker-neos.log:
         background: true
     # Wait till TYPO3 Neos is fully configured
@@ -119,11 +123,9 @@ test:
           bin/phpunit -c Build/BuildEssentials/PhpUnit/FunctionalTests.xml; \
           bin/behat -c Packages/Application/TYPO3.Neos/Tests/Behavior/behat.yml
         \"
-      " || true
-    
+      " || true    
     # Clean up
     - docker rm -f neos-testing || true
-
 
     # ##################################################
     # Test case:

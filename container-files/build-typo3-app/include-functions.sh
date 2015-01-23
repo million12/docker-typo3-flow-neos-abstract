@@ -13,20 +13,25 @@ log() {
 #########################################################
 # Check in the loop (every 2s) if the database backend
 # service is already available.
+# Globals:
+#   T3APP_DB_HOST: db hostname
+#   T3APP_DB_PORT: db port number
+#   T3APP_DB_USER: db username
+#   MYSQL_CMD_PARAMS
 #########################################################
 function wait_for_db() {
   set +e
   local res=1
   while [[ $res -ne 0 ]]; do
-    mysql $MYSQL_CMD_AUTH_PARAMS --execute "status" > /dev/null 2>&1
+    mysql $MYSQL_CMD_PARAMS --execute "status" 1>/dev/null
     res=$?
-    if [[ $res -ne 0 ]]; then log "Waiting for DB service..." && sleep 2; fi
+    if [[ $res -ne 0 ]]; then log "Waiting for DB service ($T3APP_DB_HOST:$T3APP_DB_PORT username:$T3APP_DB_USER)..." && sleep 2; fi
   done
   set -e
   
   # Display DB status...
   log "Database status:"
-  mysql $MYSQL_CMD_AUTH_PARAMS --execute "status"
+  mysql $MYSQL_CMD_PARAMS --execute "status"
 }
 
 #########################################################
@@ -102,14 +107,14 @@ function install_typo3_app_do_pull() {
 #########################################################
 # Creates database for TYPO3 app, if doesn't exist yet
 # Globals:
-#   MYSQL_CMD_AUTH_PARAMS
+#   MYSQL_CMD_PARAMS
 # Arguments:
 #   String: db name to create
 #########################################################
 function create_app_db() {
   local db_name=$@
   log "Creating TYPO3 app database '$db_name' (if it doesn't exist yet)..."
-  mysql $MYSQL_CMD_AUTH_PARAMS --execute="CREATE DATABASE IF NOT EXISTS $db_name CHARACTER SET utf8 COLLATE utf8_general_ci"
+  mysql $MYSQL_CMD_PARAMS --execute="CREATE DATABASE IF NOT EXISTS $db_name CHARACTER SET utf8 COLLATE utf8_general_ci"
   log "DB created."
 }
 
@@ -153,9 +158,10 @@ function create_vhost_conf() {
 # Update TYPO3 app Settings.yaml with DB backend settings
 # Globals:
 #   SETTINGS_SOURCE_FILE
-#   DB_ENV_MARIADB_PASS
-#   DB_PORT_3306_TCP_ADDR
-#   DB_PORT_3306_TCP_PORT
+#   T3APP_DB_HOST
+#   T3APP_DB_PORT
+#   T3APP_DB_USER
+#   T3APP_DB_PASS
 # Arguments:
 #   String: filepath to config file to create/configure
 #   String: database name to put in Settings.yaml
@@ -173,10 +179,10 @@ function create_settings_yaml() {
 
   log "Configuring $settings_file..."
   sed -i -r "1,/dbname:/s/dbname: .+?/dbname: $settings_db_name/g" $settings_file
-  sed -i -r "1,/user:/s/user: .+?/user: admin/g" $settings_file
-  sed -i -r "1,/password:/s/password: .+?/password: $DB_ENV_MARIADB_PASS/g" $settings_file
-  sed -i -r "1,/host:/s/host: .+?/host: $DB_PORT_3306_TCP_ADDR/g" $settings_file
-  sed -i -r "1,/port:/s/port: .+?/port: $DB_PORT_3306_TCP_PORT/g" $settings_file
+  sed -i -r "1,/user:/s/user: .+?/user: $T3APP_DB_USER/g" $settings_file
+  sed -i -r "1,/password:/s/password: .+?/password: $T3APP_DB_PASS/g" $settings_file
+  sed -i -r "1,/host:/s/host: .+?/host: $T3APP_DB_HOST/g" $settings_file
+  sed -i -r "1,/port:/s/port: .+?/port: $T3APP_DB_PORT/g" $settings_file
 
   cat $settings_file
   log "$settings_file updated."

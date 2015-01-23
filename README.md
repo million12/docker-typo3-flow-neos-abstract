@@ -7,7 +7,7 @@ For an **example of TYPO3 Flow image** built on top of this one, see [million12/
 
 For an **example of TYPO3 Neos image** built on top of this one, see [million12/typo3-neos](https://github.com/million12/docker-typo3-neos) repository.
 
-The image is designed that after running a container from it, you'll get working TYPO3 Flow/Neos in a matter of seconds. To achieve that, when the image is being build, it pre-installs (via `composer install`) requested version of TYPO3 Flow/Neos into /tmp location (and all its dependencies). Later on, when the container is run, it will initialise and configure that pre-installed package. This process is very quick because all source code is already in place. During that set-up, Nginx vhost(s) will be set, Settings.yaml will be updated with database credentials (linked db container), database will be migrated and - if it is Neos - initial Neos admin user will be created and specified site package will be imported. Read below about available ENV variables to customise your setup.
+The image is designed that after running a container from it, you'll get working TYPO3 Flow/Neos in a matter of seconds. To achieve that, when the image is being build, it pre-installs (via `composer install`) requested version of TYPO3 Flow/Neos into /tmp location (and all its dependencies). Later on, when the container is run, it will initialise and configure that pre-installed package. This process is very quick because all source code is already in place. During that set-up, Nginx vhost(s) will be set, Settings.yaml will be updated with database credentials (see [Database connection](#database-connection) section), database will be migrated and - if it is Neos - initial Neos admin user will be created and specified site package will be imported. Read below about available ENV variables to customise your setup.
 
 ## Flow or Neos installation
 
@@ -79,7 +79,7 @@ You can completely override that template file if you need custom configuration.
 TYPO3 app which was pre-installed during the image build process is unpacked to /data/www/$T3APP_NAME and - optionally - git pull is executed (if `T3APP_ALWAYS_DO_PULL` is set to true).
 
 ##### Database config
-Default Configuration/Settings.yaml is created (if doesn't exist) and updated with DB credentials to linked DB container. Database `T3APP_DB_NAME` is created if it does not exist yet.
+Default Configuration/Settings.yaml is created (if doesn't exist) and updated with DB credentials. Read on [Database connection](#database-connection) section for more info. Database `T3APP_DB_NAME` is created if it does not exist yet.
 
 ##### Doctrine migration, site package install
 If fresh/empty database is detected, `./flow doctrine:migrate` is performed. For Neos installation additional steps are required: admin user is created and `T3APP_NEOS_SITE_PACKAGE` is imported. If `T3APP_NEOS_SITE_PACKAGE_FORCE_REIMPORT` is set to TRUE, site content will be pruned/imported each time container starts.
@@ -184,10 +184,6 @@ Hostname(s) to configure in Nginx. Nginx is configured that it will set `FLOW_CO
 
 Note: vhost `behat.dev.${T3APP_NAME}"` is important one if you plan to run Behat test on that container (and you have set T3APP_DO_INIT_TESTS to true). In addition, for that vhost, Nginx sets `Development/Behat` FLOW_CONTEXT (see [vhost.conf](container-files/build-typo3-app/vhost.conf)).
 
-**T3APP_DB_NAME**  
-Default: `T3APP_DB_NAME=${T3APP_DB_NAME:="typo3_app"}`  
-Database name, which will be used for TYPO3 app. It will be created (if does not exist) and migrated (if fresh installation is detected).
-
 **T3APP_USER_NAME**  
 **T3APP_USER_PASS**  
 **T3APP_USER_FNAME**  
@@ -269,6 +265,37 @@ if [[ $RUNTIME_EXECUTED_MIGRATIONS == 0 ]]; then
     do_something
 fi
 ```
+
+### Database connection
+
+The easiest setup is to link the container with db container, as shown in [Flow](https://github.com/million12/docker-typo3-flow) and [Neos](https://github.com/million12/docker-typo3-neos) container examples:
+```
+docker run -d --name=db-container --env="MARIADB_PASS=my-pass" million12/mariadb
+docker run -d --name=neos -p=8080:80 --link=db-container:db --env="T3APP_VHOST_NAMES=neos dev.neos" million12/typo3-neos
+```
+We relay on the fact, that `docker run --link=db-container:db` creates all necessary ENV variables inside our container  and necessary entry in `/etc/hosts` (i.e. `DB_CONTAINER_IP_ADD db` which gives you ability to connect to `db` hostname inside the container), so the connection just works.
+
+If you need more flexible setup, customise it with the following ENV variables.
+
+**T3APP_DB_NAME**  
+Default: `T3APP_DB_NAME=${T3APP_NAME}`  
+Database name, which will be used for TYPO3 app. It will be created (if does not exist) and migrated (for fresh installations). Note: all non-allowed in db identifiers characters will be replaced with `_` char when using the db name from `T3APP_NAME` value (which might contain e.g. `-` chars).
+
+**T3APP_DB_HOST**  
+Default: `T3APP_DB_HOST=db`  
+Database hostname.
+
+**T3APP_DB_PORT**  
+Default: `T3APP_DB_PORT=3306`  
+Database port number.
+
+**T3APP_DB_USER**  
+Default: `T3APP_DB_USER=admin`  
+Database username, which will be used for the connection. This user must have permissions to *create* the `T3APP_DB_NAME` database, if it doesn't exist yet.
+
+**T3APP_DB_PASS**  
+Default: `T3APP_DB_PASS=password`
+
 
 ## Authors
 

@@ -19,10 +19,7 @@ INSTALLATION_TYPE="flow" # Default installation type, will be set later on if di
 SETTINGS_SOURCE_FILE="${CWD}/Settings.yaml"
 VHOST_SOURCE_FILE="${CWD}/vhost.conf"
 VHOST_FILE="/data/conf/nginx/hosts.d/${T3APP_NAME}.conf"
-DB_ENV_MARIADB_PASS=${DB_ENV_MARIADB_PASS:="password"}
-DB_PORT_3306_TCP_ADDR=${DB_PORT_3306_TCP_ADDR:="127.0.0.1"}
-DB_PORT_3306_TCP_PORT=${DB_PORT_3306_TCP_PORT:="3306"}
-MYSQL_CMD_AUTH_PARAMS="--user=admin --password=$DB_ENV_MARIADB_PASS --host=$DB_PORT_3306_TCP_ADDR --port=$DB_PORT_3306_TCP_PORT"
+MYSQL_CMD_PARAMS="-u$T3APP_DB_USER -p$T3APP_DB_PASS -h $T3APP_DB_HOST -P $T3APP_DB_PORT"
 CONTAINER_IP=$(ip -4 addr show eth0 | grep inet | cut -d/ -f1 | awk '{print $2}')
 BASH_RC_FILE="$WEB_SERVER_ROOT/.bash_profile"
 BASH_RC_SOURCE_FILE="$CWD/.bash_profile"

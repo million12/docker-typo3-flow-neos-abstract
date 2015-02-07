@@ -41,6 +41,7 @@ function wait_for_db() {
 #   WEB_SERVER_ROOT
 #   APP_ROOT
 #   T3APP_NAME
+#   T3APP_BUILD_BRANCH
 #########################################################
 function install_typo3_app() {
   # Check if app is already installed (when restaring stopped container)
@@ -56,6 +57,12 @@ function install_typo3_app() {
   # but, when container is re-run (with shared data volume), not clearing it can cause random issues
   # (e.g. due to changes in the newly pulled code).
   rm -rf rm -rf Data/Temporary/*
+  
+  # Allow switching between branches for running containers
+  # E.g. user can provide different branch for `docker build` (in Dockerfile)
+  # and different when launching the container.
+  # Note: it's done with --force param, so local conflicting changes will be thrown away. But we assume sb who is doing this knows about it.
+  git checkout --force $T3APP_BUILD_BRANCH
   
   # Debug: show most recent git log messages
   log "TYPO3 app installed. Most recent commits:"

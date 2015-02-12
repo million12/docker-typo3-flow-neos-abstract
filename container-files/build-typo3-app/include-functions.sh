@@ -62,7 +62,7 @@ function install_typo3_app() {
   # E.g. user can provide different branch for `docker build` (in Dockerfile)
   # and different when launching the container.
   # Note: it's done with --force param, so local conflicting changes will be thrown away. But we assume sb who is doing this knows about it.
-  git checkout --force $T3APP_BUILD_BRANCH
+  git fetch && git checkout --force $T3APP_BUILD_BRANCH
   
   # Debug: show most recent git log messages
   log "TYPO3 app installed. Most recent commits:"

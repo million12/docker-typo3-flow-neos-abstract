@@ -61,6 +61,7 @@ You start with creating a new Docker image based on **million12/typo3-flow-neos-
 #### Build phase
 
 During *build process* of your image, TYPO3 app will be pre-installed using `composer install` and embedded inside the image as a tar achive. Using ENV variables (listed below) you can customise pre-install process: provide custom distribution (e.g. from your GitHub repo) or specify different branch/tag. For detailed info about how this pre-install script works, see [pre-install-typo3-app.sh](container-files/build-typo3-app/pre-install-typo3-app.sh).
+It is posible to not use pre-installed app and compose app on first container start with setting `T3APP_PREINSTALL` variable to false (and not calling `RUN . /build-typo3-app/pre-install-typo3-app.sh` your image).
 
 In addition, if in the root directory of your project you have executable `build.sh` it will be executed as `build.sh --preinstall`. You can easily add custom build steps there which you want to run during Docker build phase. See `T3APP_USER_BUILD_SCRIPT` variable where you can customise path to that script.
 

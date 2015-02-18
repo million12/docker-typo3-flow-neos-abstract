@@ -8,6 +8,9 @@
 # We do that to avoid installing TYPO3 app during the runtime, which 
 # can be slow and potentially error-prone (i.e. composer conflicts/timeouts etc).
 #
+# It is posible to not use pre-installed app and compose the app on first container
+# start with setting T3APP_PREINSTALL variable to false 
+# (and not calling RUN . /build-typo3-app/pre-install-typo3-app.sh your image).
 
 set -e
 set -u

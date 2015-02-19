@@ -46,9 +46,25 @@ function wait_for_db() {
 function install_typo3_app() {
   # Check if app is already installed (when restaring stopped container)
   if [ ! -d $APP_ROOT ]; then
-    log "Installing TYPO3 app (from pre-installed archive)..."
-    cd $WEB_SERVER_ROOT && tar -zxf /tmp/$INSTALLED_PACKAGE_NAME.tgz
-    mv $INSTALLED_PACKAGE_NAME $T3APP_NAME
+    if [ "${T3APP_PREINSTALL^^}" = TRUE ]; then
+      log "Installing TYPO3 app (from pre-installed archive)..."
+      cd $WEB_SERVER_ROOT && tar -zxf /tmp/$INSTALLED_PACKAGE_NAME.tgz
+      mv $INSTALLED_PACKAGE_NAME $T3APP_NAME
+    else
+      log "Installing TYPO3 app..."
+      cd $WEB_SERVER_ROOT
+      # Clone TYPO3 app code from provided repository
+      git clone $T3APP_BUILD_REPO_URL $T3APP_NAME
+      cd $T3APP_NAME
+      # Do composer install
+      git checkout $T3APP_BUILD_BRANCH
+      git log -10 --pretty=format:"%h %an %cr: %s" --graph
+      COMPOSER_PROCESS_TIMEOUT=900 composer install $T3APP_BUILD_COMPOSER_PARAMS
+      echo
+      echo "TYPO3 app from $T3APP_BUILD_REPO_URL ($T3APP_BUILD_BRANCH) installed."
+      echo $(ls -lh $CWD)
+      echo
+    fi
   fi
 
   cd $APP_ROOT

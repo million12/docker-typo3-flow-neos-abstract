@@ -42,28 +42,24 @@ function wait_for_db() {
 #   APP_ROOT
 #   T3APP_NAME
 #   T3APP_BUILD_BRANCH
+#   T3APP_PREINSTALL
 #########################################################
 function install_typo3_app() {
   # Check if app is already installed (when restaring stopped container)
   if [ ! -d $APP_ROOT ]; then
     if [ "${T3APP_PREINSTALL^^}" = TRUE ]; then
       log "Installing TYPO3 app (from pre-installed archive)..."
-      cd $WEB_SERVER_ROOT && tar -zxf /tmp/$INSTALLED_PACKAGE_NAME.tgz
-      mv $INSTALLED_PACKAGE_NAME $T3APP_NAME
+      cd /tmp && tar -zxf /tmp/$INSTALLED_PACKAGE_NAME.tgz
     else
       log "Installing TYPO3 app..."
-      cd $WEB_SERVER_ROOT
-      # Clone TYPO3 app code from provided repository
-      git clone $T3APP_BUILD_REPO_URL $T3APP_NAME
-      cd $T3APP_NAME
-      # Do composer install
-      git checkout $T3APP_BUILD_BRANCH
-      git log -10 --pretty=format:"%h %an %cr: %s" --graph
-      COMPOSER_PROCESS_TIMEOUT=900 composer install $T3APP_BUILD_COMPOSER_PARAMS
-      echo
-      echo "TYPO3 app from $T3APP_BUILD_REPO_URL ($T3APP_BUILD_BRANCH) installed."
-      echo $(ls -lh $CWD)
-      echo
+      clone_and_compose
+    fi
+    if [ "${T3APP_USE_SURF_DEPLOYMENT^^}" = TRUE ]; then
+      create_surf_directory_structure
+      mv /tmp/$INSTALLED_PACKAGE_NAME ${SURF_ROOT}/releases/initial
+      create_surf_symlinks
+    else
+      mv /tmp/$INSTALLED_PACKAGE_NAME $APP_ROOT
     fi
   fi
 
@@ -73,18 +69,54 @@ function install_typo3_app() {
   # but, when container is re-run (with shared data volume), not clearing it can cause random issues
   # (e.g. due to changes in the newly pulled code).
   rm -rf rm -rf Data/Temporary/*
-  
-  # Debug: show most recent git log messages
-  log "TYPO3 app installed. Most recent commits:"
-  git log -5 --pretty=format:"%h %an %cr: %s" --graph && echo # Show most recent changes
-  
-  # If app is/was already installed, pull the most recent code
-  if [ "${T3APP_ALWAYS_DO_PULL^^}" = TRUE ]; then
-    install_typo3_app_do_pull
+
+  # When using Surf for deployments, no need update the app here
+  if [ "${T3APP_USE_SURF_DEPLOYMENT^^}" != TRUE ]; then
+    # Allow switching between branches for running containers
+    # E.g. user can provide different branch for `docker build` (in Dockerfile)
+    # and different when launching the container.
+    # Note: it's done with --force param, so local conflicting changes will be thrown away. But we assume sb who is doing this knows about it.
+    git fetch && git checkout --force $T3APP_BUILD_BRANCH
+    
+    # Debug: show most recent git log messages
+    log "TYPO3 app installed. Most recent commits:"
+    git log -5 --pretty=format:"%h %an %cr: %s" --graph && echo # Show most recent changes
+    
+    # If app is/was already installed, pull the most recent code
+    if [ "${T3APP_ALWAYS_DO_PULL^^}" = TRUE ]; then
+      install_typo3_app_do_pull
+    fi
+    
+    # If composer.lock has changed, this will re-install things...
+    composer install $T3APP_BUILD_COMPOSER_PARAMS
   fi
-  
-  # If composer.lock has changed, this will re-install things...
-  composer install $T3APP_BUILD_COMPOSER_PARAMS
+}
+
+#########################################################
+# Create initial directory structure for TYPO3 Surf.
+# Globals:
+#   SURF_ROOT
+#########################################################
+function create_surf_directory_structure() {
+  mkdir -p $SURF_ROOT/cache $SURF_ROOT/releases
+  mkdir -p $SURF_ROOT/shared/Data/{Logs,Persistent} 
+  mkdir -p $SURF_ROOT/shared/Configuration
+  cd $SURF_ROOT/releases
+  ln -sfn initial current
+}
+
+#########################################################
+# Create initial symlinks for TYPO3 Surf.
+# Globals:
+#   APP_ROOT
+#########################################################
+function create_surf_symlinks() {
+  cd $APP_ROOT
+  mkdir -p Data
+  ln -sf ../../../shared/Data/Logs ./Data/Logs
+  ln -sf ../../../shared/Data/Persistent ./Data/Persistent
+  cd Configuration
+  mv Production ../../../shared/Configuration/ && ln -snf ../../../shared/Configuration/Production Production
 }
 
 #########################################################
@@ -166,6 +198,7 @@ function create_vhost_conf() {
 
   sed -i -r "s#%server_name%#${vhost_names}#g" $VHOST_FILE
   sed -i -r "s#%root%#${APP_ROOT}#g" $VHOST_FILE
+  sed -i -r "s#%next_root%#${SURF_ROOT}/releases/next#g" $VHOST_FILE
   
   # Configure redirect: www to non-www
   # @TODO: make it configurable via env var
@@ -177,9 +210,28 @@ function create_vhost_conf() {
 }
 
 #########################################################
-# Update TYPO3 app Settings.yaml with DB backend settings
+# Create TYPO3 app Settings.yaml. Don't foreget to call
+# `update_settings_yaml` afterwards to insert the correct settings.
 # Globals:
 #   SETTINGS_SOURCE_FILE
+# Arguments:
+#   String: filepath to config file to create/configure
+#########################################################
+function create_settings_yaml() {
+  local settings_file=$1
+
+  mkdir -p $(dirname $settings_file)
+  
+  if [ ! -f $settings_file ]; then
+    cat $SETTINGS_SOURCE_FILE > $settings_file
+    log "Configuration file $settings_file created."
+  fi
+}
+
+#########################################################
+# Update TYPO3 app Settings.yaml with DB backend settings.
+# Works if only file exists.
+# Globals:
 #   T3APP_DB_HOST
 #   T3APP_DB_PORT
 #   T3APP_DB_USER
@@ -188,26 +240,21 @@ function create_vhost_conf() {
 #   String: filepath to config file to create/configure
 #   String: database name to put in Settings.yaml
 #########################################################
-function create_settings_yaml() {
+function update_settings_yaml() {
   local settings_file=$1
   local settings_db_name=$2
 
-  mkdir -p $(dirname $settings_file)
-  
-  if [ ! -f $settings_file ]; then
-    cat $SETTINGS_SOURCE_FILE > $settings_file
-    log "Configuration file $settings_file created."
+  if [ -f $settings_file ]; then
+    log "Configuring $settings_file..."
+    sed -i -r "1,/dbname:/s/dbname: .+?/dbname: $settings_db_name/g" $settings_file
+    sed -i -r "1,/user:/s/user: .+?/user: $T3APP_DB_USER/g" $settings_file
+    sed -i -r "1,/password:/s/password: .+?/password: $T3APP_DB_PASS/g" $settings_file
+    sed -i -r "1,/host:/s/host: .+?/host: $T3APP_DB_HOST/g" $settings_file
+    sed -i -r "1,/port:/s/port: .+?/port: $T3APP_DB_PORT/g" $settings_file
+
+    cat $settings_file
+    log "$settings_file updated."
   fi
-
-  log "Configuring $settings_file..."
-  sed -i -r "1,/dbname:/s/dbname: .+?/dbname: $settings_db_name/g" $settings_file
-  sed -i -r "1,/user:/s/user: .+?/user: $T3APP_DB_USER/g" $settings_file
-  sed -i -r "1,/password:/s/password: .+?/password: $T3APP_DB_PASS/g" $settings_file
-  sed -i -r "1,/host:/s/host: .+?/host: $T3APP_DB_HOST/g" $settings_file
-  sed -i -r "1,/port:/s/port: .+?/port: $T3APP_DB_PORT/g" $settings_file
-
-  cat $settings_file
-  log "$settings_file updated."
 }
 
 #########################################################
@@ -276,7 +323,7 @@ function warmup_cache() {
 # Set correct permission for TYPO3 app
 #########################################################
 function set_permissions() {
-  chown -R www:www $APP_ROOT
+  chown -R www:www $WEB_SERVER_ROOT/$T3APP_NAME
 }
 
 #########################################################

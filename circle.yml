@@ -165,3 +165,10 @@ test:
     
     - curl -s -L http://typo3-app:8002 | grep "Kickstart your first package"
     - curl -s -L http://flow:8002 | grep "Bootstrap your first package"
+
+
+deployment:
+  rebuild_image_on_docker_hub:
+    branch: master
+    commands:
+      - curl --data "build=true" -X POST https://registry.hub.docker.com/u/million12/typo3-flow-neos-abstract/trigger/cb18c6d5-235e-405f-99c1-947df2ddacae/

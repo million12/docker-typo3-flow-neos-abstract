@@ -74,12 +74,6 @@ function install_typo3_app() {
   # (e.g. due to changes in the newly pulled code).
   rm -rf rm -rf Data/Temporary/*
   
-  # Allow switching between branches for running containers
-  # E.g. user can provide different branch for `docker build` (in Dockerfile)
-  # and different when launching the container.
-  # Note: it's done with --force param, so local conflicting changes will be thrown away. But we assume sb who is doing this knows about it.
-  git fetch && git checkout --force $T3APP_BUILD_BRANCH
-  
   # Debug: show most recent git log messages
   log "TYPO3 app installed. Most recent commits:"
   git log -5 --pretty=format:"%h %an %cr: %s" --graph && echo # Show most recent changes
@@ -114,6 +108,11 @@ function install_typo3_app_do_pull() {
     git status
     git stash --include-untracked
   fi
+  
+  # Allow switching between branches for running containers
+  # E.g. user can provide different branch for `docker build` (in Dockerfile)
+  # and different when launching the container.
+  git fetch && git checkout --force $T3APP_BUILD_BRANCH
   
   if [[ ! $(git pull -f) ]]; then
     log "git pull failed. Trying once again with 'git reset --hard origin/${T3APP_BUILD_BRANCH}'..."

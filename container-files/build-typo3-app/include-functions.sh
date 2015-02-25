@@ -137,7 +137,7 @@ function install_typo3_app_do_pull() {
 function create_app_db() {
   local db_name=$@
   log "Creating TYPO3 app database '$db_name' (if it doesn't exist yet)..."
-  mysql $MYSQL_CMD_PARAMS --execute="CREATE DATABASE IF NOT EXISTS $db_name CHARACTER SET utf8 COLLATE utf8_general_ci"
+  mysql $MYSQL_CMD_PARAMS --execute="CREATE DATABASE IF NOT EXISTS $db_name CHARACTER SET utf8 COLLATE utf8_unicode_ci"
   log "DB created."
 }
 

@@ -57,6 +57,9 @@ if [ "${T3APP_DO_INIT^^}" = TRUE ]; then
   log "DB executed migrations: $executed_migrations"
   
   # Only proceed with doctrine:migration it is a fresh installation...
+  if [[ $(./flow help | grep "database:setcharset") ]]; then
+    ./flow database:setcharset # comatibility with Flow < 3.0
+  fi
   if [[ $executed_migrations == 0 ]]; then
     log "Fresh ${INSTALLATION_TYPE^^} installation detected: making DB migration:"
     doctrine_update

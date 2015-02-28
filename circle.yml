@@ -169,6 +169,6 @@ test:
 
 deployment:
   rebuild_image_on_docker_hub:
-    branch: master
+    branch: [master, /php.*/, hhvm]
     commands:
       - curl --data "build=true" -X POST https://registry.hub.docker.com/u/million12/typo3-flow-neos-abstract/trigger/cb18c6d5-235e-405f-99c1-947df2ddacae/

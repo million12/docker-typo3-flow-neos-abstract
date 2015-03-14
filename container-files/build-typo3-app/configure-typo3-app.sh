@@ -9,12 +9,18 @@ set -e
 set -u
 
 source ./include-functions.sh
+source ./include-functions-shared.sh
 source ./include-variables.sh
 
 # Internal variables - there is no need to change them
 CWD=$(pwd) # Points to /build-typo3-app/ directory, where this script is located
 WEB_SERVER_ROOT="/data/www"
-APP_ROOT="${WEB_SERVER_ROOT}/${T3APP_NAME}"
+if [ "${T3APP_USE_SURF_DEPLOYMENT^^}" = TRUE ]; then
+  SURF_ROOT="${WEB_SERVER_ROOT}/${T3APP_NAME}/surf"
+  APP_ROOT="${SURF_ROOT}/releases/current"
+else
+  APP_ROOT="${WEB_SERVER_ROOT}/${T3APP_NAME}"
+fi
 INSTALLATION_TYPE="flow" # Default installation type, will be set later on if different one (e.g. Neos) is detected
 SETTINGS_SOURCE_FILE="${CWD}/Settings.yaml"
 VHOST_SOURCE_FILE="${CWD}/vhost.conf"
@@ -50,7 +56,11 @@ if [ "${T3APP_DO_INIT^^}" = TRUE ]; then
   
   create_app_db $T3APP_DB_NAME
   create_settings_yaml "Configuration/Settings.yaml" $T3APP_DB_NAME
-  
+  update_settings_yaml "Configuration/Settings.yaml" $T3APP_DB_NAME
+  # Update production and development settings only if they exist
+  update_settings_yaml "Configuration/Production/Settings.yaml" $T3APP_DB_NAME;
+  update_settings_yaml "Configuration/Development/Settings.yaml" $T3APP_DB_NAME;
+
   # DB migration: where are we? Also export it so site build script can access to that info.
   executed_migrations=$(get_db_executed_migrations)
   export RUNTIME_EXECUTED_MIGRATIONS=$executed_migrations

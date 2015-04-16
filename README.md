@@ -47,7 +47,7 @@ ENV T3APP_BUILD_REPO_URL git://git.typo3.org/Neos/Distributions/Base.git
 #
 # Pre-install TYPO3 Neos into /tmp location
 #
-RUN . /build-typo3-app/pre-install-typo3-neos.sh
+RUN . /build-typo3-app/pre-install-typo3-app.sh
 ```
 
 This will pre-install default TYPO3 Neos distribution, version 1.1.2. Uncomment and provide custom `ENV T3APP_BUILD_REPO_URL` to install your own distribution.
@@ -113,7 +113,7 @@ ENV T3APP_BUILD_REPO_URL https://github.com/you/your-typo3-flow-app.git
 ENV T3APP_BUILD_COMPOSER_PARAMS --no-dev --prefer-dist --optimize-autoloader
 
 # Run pre-install script
-RUN . /build-typo3-app/pre-install-typo3-neos.sh
+RUN . /build-typo3-app/pre-install-typo3-app.sh
 ```
 
 
@@ -130,7 +130,7 @@ ADD gh-repo-key /
 RUN \
   chmod 600 /gh-repo-key && \
   echo "IdentityFile /gh-repo-key" >> /etc/ssh/ssh_config && \
-  . /build-typo3-app/pre-install-typo3-neos.sh
+  . /build-typo3-app/pre-install-typo3-app.sh
 ```
 
 ## Environmental variables

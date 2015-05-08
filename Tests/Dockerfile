@@ -4,7 +4,7 @@
 # It leverages Docker caching to speed up image building
 # while you develop e.g. configure-typo3-app.sh script.
 #
-FROM million12/php-app:latest
+FROM million12/nginx-php:latest
 
 ADD container-files/config /
 ADD container-files/etc /

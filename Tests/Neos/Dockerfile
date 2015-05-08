@@ -4,8 +4,8 @@ MAINTAINER Marcin Ryzycki marcin@m12.io
 # ENV: Repository for installed TYPO3 Neos distribution 
 ENV T3APP_BUILD_REPO_URL git://git.typo3.org/Neos/Distributions/Base.git
 
-# ENV: Install following TYPO3 Neos version
-ENV T3APP_BUILD_BRANCH 1.2.0
+# ENV: Install the following Neos version
+ENV T3APP_BUILD_BRANCH master
 
 # ENV: Import following site package
 ENV T3APP_NEOS_SITE_PACKAGE TYPO3.NeosDemoTypo3Org

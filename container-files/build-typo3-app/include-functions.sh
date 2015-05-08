@@ -59,7 +59,7 @@ function install_typo3_app() {
       # Do composer install
       git checkout $T3APP_BUILD_BRANCH
       git log -10 --pretty=format:"%h %an %cr: %s" --graph
-      COMPOSER_PROCESS_TIMEOUT=900 composer install $T3APP_BUILD_COMPOSER_PARAMS
+      composer install $T3APP_BUILD_COMPOSER_PARAMS
       echo
       echo "TYPO3 app from $T3APP_BUILD_REPO_URL ($T3APP_BUILD_BRANCH) installed."
       echo $(ls -lh $CWD)
@@ -352,10 +352,17 @@ function behat_configure_yml_files() {
 #   T3APP_USER_NAME
 #########################################################
 function configure_env() {
-  # Configure git, so git stash/pull always works. Otherwise git shouts about missing configuration.
+  # Configure git
+  # To make sure git stash/pull always works. Otherwise git shouts about missing configuration.
   # Note: the actual values doesn't matter, most important is that they are configured.
   git config --global user.email "${T3APP_USER_NAME}@local"
   git config --global user.name $T3APP_USER_NAME
+  
+  # Configure composer
+  # Increase timeout for composer complete install - it might take a while sometimes to install whole Flow/Neos
+  composer config --global process-timeout 1800
+  # This is an automated build, so if there are any changes in vendors packages, discard them w/o asking
+  composer config --global discard-changes true
 
   # Add T3APP_VHOST_NAMES to /etc/hosts inside this container
   echo "127.0.0.1 $T3APP_VHOST_NAMES" | tee -a /etc/hosts

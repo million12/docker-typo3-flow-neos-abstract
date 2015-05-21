@@ -8,6 +8,7 @@
 set -e
 set -u
 
+source ./include-functions-common.sh
 source ./include-functions.sh
 source ./include-variables.sh
 
@@ -36,6 +37,7 @@ install_typo3_app
 cd $APP_ROOT
 wait_for_db
 
+hook_user_build_script --post-install
 
 # Detect real INSTALLATION_TYPE, based on what's found in composer.json
 grep "typo3/neos" composer.json && INSTALLATION_TYPE="neos"
@@ -56,6 +58,8 @@ if [ "${T3APP_DO_INIT^^}" = TRUE ]; then
   export RUNTIME_EXECUTED_MIGRATIONS=$executed_migrations
   log "DB executed migrations: $executed_migrations"
   
+  hook_user_build_script --post-settings
+  
   # Only proceed with doctrine:migration it is a fresh installation...
   if [[ $(./flow help | grep "database:setcharset") ]]; then
     ./flow database:setcharset # comatibility with Flow < 3.0
@@ -66,6 +70,8 @@ if [ "${T3APP_DO_INIT^^}" = TRUE ]; then
   else
     log "TYPO3 ${INSTALLATION_TYPE^^} app database already provisioned, skipping..."
   fi
+  
+  hook_user_build_script --post-db-migration
 
   # TYPO3 Neos steps only:
   if [[ $INSTALLATION_TYPE == "neos" ]]; then
@@ -84,8 +90,11 @@ if [ "${T3APP_DO_INIT^^}" = TRUE ]; then
     fi
   fi
   
+  hook_user_build_script --pre-cache-warmup
   warmup_cache "Production" # Warm-up caches for Production context
 fi
+
+hook_user_build_script --post-init
 # Regular TYPO3 app initialisation (END)
 
 
@@ -129,13 +138,15 @@ if [ "${T3APP_DO_INIT_TESTS^^}" = TRUE ]; then
     log "NOTICE: package 'flowpack/behat' seems to be missing but it's required to set up Behat testing."
     log "Please add '\"flowpack/behat\": \"dev-master\"' to your composer.json and start the container again." && log
   fi
+  
+  hook_user_build_script --post-test-init
 fi
 # Initialise TYPO3 app for running test (END)
 
 
 
-set_permissions
 create_vhost_conf $T3APP_VHOST_NAMES
-user_build_script
+hook_user_build_script
+set_permissions
 
 log "Installation completed." && echo

@@ -12,7 +12,7 @@ db:
 
 # Launch dev version of million12/typo3-flow-neos-abstract
 app:
-  image: million12/typo3-flow-neos-abstract
+  image: million12/typo3-flow-neos-abstract-test
   ports:
     - '8889:80'
   links:

@@ -17,36 +17,26 @@ set -u
 
 # Needs to be absolute as user can call this script from Dockerfile in multiple ways...
 source /build-typo3-app/include-variables.sh
+source /build-typo3-app/include-functions-common.sh
 
-echo
-echo "Installing TYPO3 app from $T3APP_BUILD_REPO_URL ($T3APP_BUILD_BRANCH) repository..."
-echo
+log
+log "Installing TYPO3 app from $T3APP_BUILD_REPO_URL ($T3APP_BUILD_BRANCH) repository..."
+log
 
-# Internal variables
 CWD="/tmp"
-# Internal variables end
-
 cd $CWD
 
-# Clone TYPO3 app code from provided repository
-git clone $T3APP_BUILD_REPO_URL $INSTALLED_PACKAGE_NAME
-cd $INSTALLED_PACKAGE_NAME
+configure_composer
+clone_and_compose
 
-# Do composer install
-git checkout $T3APP_BUILD_BRANCH
-git log -10 --pretty=format:"%h %an %cr: %s" --graph
-COMPOSER_PROCESS_TIMEOUT=900 composer install $T3APP_BUILD_COMPOSER_PARAMS
+hook_user_build_script --preinstall # TODO: backward-compatibility only, do not use, to be removed soon
+hook_user_build_script --post-build
 
-# If the project contains executable build.sh in the root directory
-# it will be run during 'docker build' process. Note: it's OK to run is as root 
-# as it might need these privileges to install some global tools.
-if [[ -x $T3APP_USER_BUILD_SCRIPT ]]; then $T3APP_USER_BUILD_SCRIPT --preinstall; fi
-
-# Prepare tar archive and keep only it to keep final Docker image size as small as possible
 cd $CWD
-tar -zcf $INSTALLED_PACKAGE_NAME.tgz $INSTALLED_PACKAGE_NAME && rm -rf $INSTALLED_PACKAGE_NAME
+tar -zcf $INSTALLED_PACKAGE_NAME.tgz $INSTALLED_PACKAGE_NAME # prepare compressed .tgz archive with installed source code
+rm -rf $INSTALLED_PACKAGE_NAME # remove installed source code, to minimise Docker image size
 
-echo
-echo "TYPO3 app from $T3APP_BUILD_REPO_URL ($T3APP_BUILD_BRANCH) installed."
-echo $(ls -lh $CWD)
-echo 
+log
+log "TYPO3 app from $T3APP_BUILD_REPO_URL ($T3APP_BUILD_BRANCH) installed."
+log $(du -sh $INSTALLED_PACKAGE_NAME.tgz)
+log 

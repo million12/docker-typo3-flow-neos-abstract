@@ -1,15 +1,5 @@
 #!/bin/sh
 
-#######################################
-# Echo/log function
-# Arguments:
-#   String: value to log
-#######################################
-log() {
-  if [[ "$@" ]]; then echo "[${T3APP_NAME^^}] $@";
-  else echo; fi
-}
-
 #########################################################
 # Check in the loop (every 2s) if the database backend
 # service is already available.
@@ -72,7 +62,7 @@ function install_typo3_app() {
   # Make sure cache is cleared for all contexts. This is empty during the 1st container launch,
   # but, when container is re-run (with shared data volume), not clearing it can cause random issues
   # (e.g. due to changes in the newly pulled code).
-  rm -rf rm -rf Data/Temporary/*
+  rm -rf Data/Temporary/*
   
   # Debug: show most recent git log messages
   log "TYPO3 app installed. Most recent commits:"
@@ -280,20 +270,6 @@ function set_permissions() {
 }
 
 #########################################################
-# If the installed TYPO3 app contains
-# executable $T3APP_USER_BUILD_SCRIPT file, it will run it.
-# This script can be used to do all necessary steps to make
-# the site up&running, e.g. compile CSS.
-#########################################################
-function user_build_script() {
-  cd $APP_ROOT;
-  if [[ -x $T3APP_USER_BUILD_SCRIPT ]]; then
-    # Run ./build.sh script as 'www' user
-    su www -c $T3APP_USER_BUILD_SCRIPT
-  fi
-}
-
-#########################################################
 # Get virtual host name used for Behat testing.
 # This host name has in format 'behat.dev.[BASE_DOMAIN]' 
 # We relay on the fact that Nginx is configured that
@@ -352,17 +328,13 @@ function behat_configure_yml_files() {
 #   T3APP_USER_NAME
 #########################################################
 function configure_env() {
+  configure_composer
+
   # Configure git
   # To make sure git stash/pull always works. Otherwise git shouts about missing configuration.
   # Note: the actual values doesn't matter, most important is that they are configured.
   git config --global user.email "${T3APP_USER_NAME}@local"
   git config --global user.name $T3APP_USER_NAME
-  
-  # Configure composer
-  # Increase timeout for composer complete install - it might take a while sometimes to install whole Flow/Neos
-  composer config --global process-timeout 1800
-  # This is an automated build, so if there are any changes in vendors packages, discard them w/o asking
-  composer config --global discard-changes true
 
   # Add T3APP_VHOST_NAMES to /etc/hosts inside this container
   echo "127.0.0.1 $T3APP_VHOST_NAMES" | tee -a /etc/hosts

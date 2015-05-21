@@ -215,9 +215,49 @@ When TRUE (which is default), Nginx vhost file will be always overridden with th
 
 **T3APP_USER_BUILD_SCRIPT**  
 Default: `T3APP_USER_BUILD_SCRIPT=./build.sh`  
-Path to custom build script which is executed at the end of image build phase (with `--preinstall` flag) and at the end of setup process when container is started. The path is relative to the project's root directory and the file needs to be executable.
+Path to custom build hook script which is executed during major points of the build and run phase. The path is relative to the project root directory. See [User hooks](#User hooks) section for more information about how to use it and what hooks are available.
 
-Here is example script. Note: the `--preinstall` section is executed during container build process and it is **run as super user**. Therefore it is OK to run here command which require extra privileges and you must run them without `sudo` (as there is no sudo command in the container).
+
+### Other (runtime/internal) variables
+
+These are variables which are set internally when container starts. You might want to use them e.g. inside your site build hook script (see `T3APP_USER_BUILD_SCRIPT`).
+
+**RUNTIME_EXECUTED_MIGRATIONS**  
+Contains number of executed db migrations (from `flow doctrine:migrationstatus`). Useful to detect fresh installs in site's build script.
+```
+if [[ $RUNTIME_EXECUTED_MIGRATIONS == 0 ]]; then
+    do_something
+fi
+```
+
+### User hooks
+
+Custom `build.sh` script (name/path defined in `T3APP_USER_BUILD_SCRIPT` env variable), if found, will be executed during major points of the build and run phase. Be aware that the script is always executed as `root` user - if you need something to be run as `www` user, simply prefix it with `su www -c "my command here"` withing your script.
+
+Available hooks are listed below. For each hook script `T3APP_USER_BUILD_SCRIPT` will be called with listed below parameter (i.e. `./build.sh --post-build`).
+
+* **`--post-build`**: called at the end of `docker-build` phase, just after initial composer install. Note: in previous version of this package it was called `--preinstall`, which still works for backward-compatibility reasons, but it will be removed in future versions.  
+  **Example usage:** ideal place to install any software needed for your project. It will be added to built Docker image.
+
+* **`--post-install`**: Flow/Neos app (source code) has been installed, but application is not yet fully initialised (Settings.yaml not configured, DB not migrated, site package not installed).
+
+* **`--post-settings`**: Settings.yaml is configured with DB credentials (TYPO3.Flow.persistence.backendOptions). Note: at this stage you have access to runtime variable, `RUNTIME_EXECUTED_MIGRATIONS` (see above).  
+  Ideal place to do extra configuration of Settings.yaml.
+
+* **`--post-db-migration`**: Database has been migrated/provisioned, but it's still empty (no user, no site package yet)
+
+* **`--pre-cache-warmup`**: Flow or Neos app is fully initialised, but caches haven't been warmed up yet.
+
+* **`--post-init`**: application is fully initialised, incl. warmed up caches for `Production` context. If you set `T3APP_DO_INIT_TESTS=TRUE`, this hook is called *before* Behat tests will be initialised.
+
+* **`--post-test-init`**: called after Behat tests are fully initialised. Only active when `T3APP_DO_INIT_TESTS=TRUE`.
+
+* **`[no param]`**: Called at the very end of bootstrap process during `docker run` phase. Application is fully initialised, but web server didn't started yet. It will start after your script finishes execution.  
+  **Example usage:** ideal place to run any Gulp/Grunt tasks, i.e. CSS post-processing, JS minification etc.
+
+
+Here is example `build.sh` script.
+
 ``` bash
 #!/bin/sh
 #
@@ -229,42 +269,23 @@ Here is example script. Note: the `--preinstall` section is executed during cont
 
 case $@ in
   #
-  # This is called when container is being build (and this script is called with --preinstall param)
+  # This is called at the end of `docker build` phase.
   #
-  *--preinstall*)
-    # Install required tools globally
+  *--post-build*)
+    # Install some tools required by project
     npm install -g gulp bower
-    
-    # Install site packages
-    set -e # exit with error if any of the following fail
+    ;;
+ 
+  #
+  # This is called when container launches (and the script is called without param)
+  #
+  *)
     cd Build/
     bower install --allow-root
     npm install
     gulp build --env=Production
     ;;
- 
-  #
-  # This is called when container launches (and script is called without param)
-  #
-  *)
-    cd Build/
-    bower install
-    npm install
-    gulp build --env=Production # build for production by default
-    ;;
 esac
-```
-
-### Other (runtime/internal) variables
-
-These are variables which are set internally when container starts. You might want to use them e.g. inside your site's build script (see `T3APP_USER_BUILD_SCRIPT` env var).
-
-**RUNTIME_EXECUTED_MIGRATIONS**  
-Contains number of executed db migrations (from `flow doctrine:migrationstatus`). Useful to detect fresh installs in site's build script.
-```
-if [[ $RUNTIME_EXECUTED_MIGRATIONS == 0 ]]; then
-    do_something
-fi
 ```
 
 ### Database connection

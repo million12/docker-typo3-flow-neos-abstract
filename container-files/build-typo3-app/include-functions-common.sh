@@ -30,7 +30,6 @@ function configure_composer() {
 #   T3APP_BUILD_BRANCH
 #   T3APP_BUILD_REPO_URL
 #   T3APP_BUILD_COMPOSER_PARAMS
-#   T3APP_USER_BUILD_SCRIPT
 #########################################################
 function clone_and_compose() {
   # Pull from Gerrit mirror instead of git.typo3.org (workaround of instabillity of git.typo3.org)
@@ -72,7 +71,7 @@ function hook_user_build_script() {
   fi
   
   log && log "Running user hook script with param '$param':"
-  if [[ -n "$param" && ! $(grep --quiet -- $param $T3APP_USER_BUILD_SCRIPT) ]]; then
+  if [[ -n "$param" && ! $(grep -- $param $T3APP_USER_BUILD_SCRIPT) ]]; then
     log "No param '$param' found in $T3APP_USER_BUILD_SCRIPT script content. Skipping..."
     return 0
   fi

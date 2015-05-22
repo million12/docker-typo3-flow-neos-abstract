@@ -1,4 +1,4 @@
-# TYPO3 Flow/Neos | Abstract Docker image
+# Flow/Neos abstract Docker image
 [![Circle CI](https://circleci.com/gh/million12/docker-typo3-flow-neos-abstract/tree/master.png?style=badge)](https://circleci.com/gh/million12/docker-typo3-flow-neos-abstract/tree/master)
 
 This is a Docker image [million12/typo3-flow-neos-abstract](https://registry.hub.docker.com/u/million12/typo3-flow-neos-abstract) which is **designed to easily create images with standard or customised installation** of [TYPO3 Flow](http://flow.typo3.org/) or [TYPO3 Neos](http://neos.typo3.org/). Your image can be build from  either the default "base" distribution or your own, perhaps private, repository. 
@@ -232,9 +232,14 @@ fi
 
 ### User hooks
 
-Custom `build.sh` script (name/path defined in `T3APP_USER_BUILD_SCRIPT` env variable), if found, will be executed during major points of the build and run phase. Be aware that the script is always executed as `root` user - if you need something to be run as `www` user, simply prefix it with `su www -c "my command here"` withing your script.
+If present, custom `build.sh` script (name/path defined in `T3APP_USER_BUILD_SCRIPT` env variable) might be executed during major points of the build and run phase. This is very useful if you need to add custom steps to do while your app is bootstrapping, e.g. add extra configuration, sync the content, do front-end Grunt/Gulp tasks etc.
 
-Available hooks are listed below. For each hook script `T3APP_USER_BUILD_SCRIPT` will be called with listed below parameter (i.e. `./build.sh --post-build`).
+Key things to know:
+* Hook script is executed as `<T3APP_USER_BUILD_SCRIPT> <hook-name>`, e.g. `./build.sh --post-build`.
+* The hook script is always executed as a `root` user. If you need something to be run as `www` user (Nginx and PHP-FPM run as `www` user), write something like this: `su www -c "my command here"`.
+* There's very simple check to determine if the hook should be run. If the hook script contains hook name (e.g. `--post-build`) in its content, it will be run. Otherwise not.
+
+##### List of available user hooks
 
 * **`--post-build`**: called at the end of `docker-build` phase, just after initial composer install. Note: in previous version of this package it was called `--preinstall`, which still works for backward-compatibility reasons, but it will be removed in future versions.  
   **Example usage:** ideal place to install any software needed for your project. It will be added to built Docker image.
@@ -255,8 +260,7 @@ Available hooks are listed below. For each hook script `T3APP_USER_BUILD_SCRIPT`
 * **`[no param]`**: Called at the very end of bootstrap process during `docker run` phase. Application is fully initialised, but web server didn't started yet. It will start after your script finishes execution.  
   **Example usage:** ideal place to run any Gulp/Grunt tasks, i.e. CSS post-processing, JS minification etc.
 
-
-Here is example `build.sh` script.
+##### Example user hook script
 
 ``` bash
 #!/bin/sh

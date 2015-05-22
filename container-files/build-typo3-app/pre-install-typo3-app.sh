@@ -23,8 +23,8 @@ log
 log "Installing TYPO3 app from $T3APP_BUILD_REPO_URL ($T3APP_BUILD_BRANCH) repository..."
 log
 
-CWD="/tmp"
-cd $CWD
+PREINSTALL_WORKING_DIR="/tmp"
+cd $PREINSTALL_WORKING_DIR
 
 configure_composer
 clone_and_compose
@@ -32,7 +32,7 @@ clone_and_compose
 hook_user_build_script --preinstall # TODO: backward-compatibility only, do not use, to be removed soon
 hook_user_build_script --post-build
 
-cd $CWD
+cd $PREINSTALL_WORKING_DIR
 tar -zcf $INSTALLED_PACKAGE_NAME.tgz $INSTALLED_PACKAGE_NAME # prepare compressed .tgz archive with installed source code
 rm -rf $INSTALLED_PACKAGE_NAME # remove installed source code, to minimise Docker image size
 

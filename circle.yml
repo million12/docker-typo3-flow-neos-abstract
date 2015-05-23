@@ -16,21 +16,23 @@ machine:
 
 dependencies:
   pre:
-    - docker info && docker version
-    - docker pull million12/mariadb
     - docker pull million12/nginx-php
-    - docker pull million12/php-testing
-  
+    - docker pull million12/php-testing:
+        background: true
+    - docker pull million12/mariadb:
+        background: true
+
   override:
+    # Build abstract million12/typo3-flow-neos-abstract image
+    - docker build --tag=test/typo3-flow-neos-abstract .
+    - docker build --tag=test/typo3-flow Tests/Flow/
+    - docker build --tag=test/typo3-neos Tests/Neos/
+
+  post:
     # Launch DB backend
     - docker run -d --name=db --env="MARIADB_USER=$DB_USER" --env="MARIADB_PASS=$DB_PASS" million12/mariadb
     - docker logs -f db | tee -a ${CIRCLE_ARTIFACTS}/docker-db.log:
         background: true
-  
-    # Build abstract million12/typo3-flow-neos-abstract image
-    - docker build -t million12/typo3-flow-neos-abstract .
-    - docker build --tag=test/typo3-flow Tests/Flow/
-    - docker build --tag=test/typo3-neos Tests/Neos/
 
 # Run tests
 test:

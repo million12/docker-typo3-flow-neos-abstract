@@ -14,11 +14,9 @@ ADD container-files /
 #
 # Configure image build with following ENV variables:
 # Checkout to specified branch/tag name
-#ENV T3APP_BUILD_BRANCH 1.1.2
+#ENV T3APP_BUILD_BRANCH 2.0
 # Repository for installed TYPO3 Flow or Neos distribution 
 #ENV T3APP_BUILD_REPO_URL git://git.typo3.org/Neos/Distributions/Base.git
-# Composer install parameters
-#ENV T3APP_BUILD_COMPOSER_PARAMS --dev --prefer-source
 #
 # If you need to access your private repository, you'll need to add ssh keys to the image
 # and configure SSH to use them. You can do this in following way:

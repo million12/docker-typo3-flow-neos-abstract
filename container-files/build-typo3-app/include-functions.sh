@@ -46,9 +46,13 @@ function install_typo3_app() {
       tar -zxf $preinstalled_package_file
       mv $PREINSTALL_PACKAGE_NAME $APP_ROOT
     else
-      log "Installing app..."
+      log && log "Installing app (fresh install)..."
       clone_and_compose $APP_ROOT
     fi
+  fi
+  
+  if [ "${T3APP_USE_SURF_DEPLOYMENT^^}" = TRUE ]; then
+    create_surf_directory_structure
   fi
 
   cd $APP_ROOT
@@ -66,9 +70,6 @@ function install_typo3_app() {
   if [ "${T3APP_ALWAYS_DO_PULL^^}" = TRUE ]; then
     install_typo3_app_do_pull
   fi
-  
-  # If composer.lock has changed, this will re-install things...
-  composer install $T3APP_BUILD_COMPOSER_PARAMS
 }
 
 #########################################################
@@ -107,6 +108,37 @@ function install_typo3_app_do_pull() {
   git log -10 --pretty=format:"%h %an %cr: %s" --graph
   
   set -e # restore -e setting
+  
+  # After code pull composer.lock could have changed. This will re-install things...
+  composer install $T3APP_BUILD_COMPOSER_PARAMS
+}
+
+#########################################################
+# Create initial directory structure for Surf deployments
+# Globals:
+#   APP_ROOT
+#   SURF_ROOT
+#########################################################
+function create_surf_directory_structure() {
+  mkdir -p $SURF_ROOT/{cache,releases}
+  mkdir -p $SURF_ROOT/shared/Configuration
+  mkdir -p $SURF_ROOT/shared/Data/{Logs,Persistent}
+  
+  # During container start the app has been installed to 'initial' directory
+  # Link it to 'current', Surf's current (live) release. 
+  cd $SURF_ROOT/releases
+  ln -sfn initial current
+  
+  # Symlink Data/Logs, Data/Persistent to shared Surf directories
+  cd $APP_ROOT
+  mkdir -p Data
+  ln -sf ../../../shared/Data/Logs Data/Logs
+  ln -sf ../../../shared/Data/Persistent Data/Persistent
+  
+  # Move Production context to Surf shared directory - this is where Surf expects it
+  cd $APP_ROOT/Configuration
+  mv Production ../../../shared/Configuration/.
+  ln -snf ../../../shared/Configuration/Production Production
 }
 
 
@@ -156,12 +188,55 @@ function create_vhost_conf() {
   # @TODO: make possible reversed behaviour (non-www to www)
   sed -i -r "s#%server_name_primary%#${vhost_names_arr[0]}#g" $VHOST_FILE
   
-  cat $VHOST_FILE
+  cat $VHOST_FILE && echo '----------------------------------------------'
   log "Nginx vhost configured."
+  
+  if [ "${T3APP_USE_SURF_DEPLOYMENT^^}" = TRUE ]; then
+    create_vhost_conf_for_surf
+  fi
 }
 
 #########################################################
-# Update TYPO3 app Settings.yaml with DB backend settings
+# Create Nginx vhost for Surf smoking tests
+# (by default 'next.<1st vhost name from $T3APP_VHOST_NAMES>').
+#
+# Globals:
+#   T3APP_SURF_SMOKE_TEST_DOMAIN
+#   SURF_ROOT
+#   VHOST_SURF_FILE
+#   VHOST_SURF_SOURCE_FILE
+#########################################################
+function create_vhost_conf_for_surf() {
+  log "Configuring vhost ${T3APP_SURF_SMOKE_TEST_DOMAIN} for Surf deployment"
+
+  cat $VHOST_SURF_SOURCE_FILE > $VHOST_SURF_FILE
+  sed -i -r "s#%server_name%#${T3APP_SURF_SMOKE_TEST_DOMAIN}#g" $VHOST_SURF_FILE
+  sed -i -r "s#%root%#${SURF_ROOT}/releases/next#g" $VHOST_SURF_FILE
+  
+  cat $VHOST_SURF_FILE && echo '----------------------------------------------'
+  log "Nginx vhost for Surf configured."
+}
+
+#########################################################
+# Create app settings .yaml file
+# Globals:
+#   SETTINGS_SOURCE_FILE
+# Arguments:
+#   String: filepath to config file to create
+#########################################################
+function create_settings_yaml() {
+  local settings_file=$1
+  
+  # Only proceed if file DOES NOT exist...
+  if [ -f $settings_file ]; then return 0; fi
+
+  mkdir -p $(dirname $settings_file)
+  cat $SETTINGS_SOURCE_FILE > $settings_file
+  log "Configuration file $settings_file created."
+}
+
+#########################################################
+# Update app settings yaml file with DB backend settings
 # Globals:
 #   SETTINGS_SOURCE_FILE
 #   T3APP_DB_HOST
@@ -172,16 +247,12 @@ function create_vhost_conf() {
 #   String: filepath to config file to create/configure
 #   String: database name to put in Settings.yaml
 #########################################################
-function create_settings_yaml() {
+function update_settings_yaml() {
   local settings_file=$1
   local settings_db_name=$2
-
-  mkdir -p $(dirname $settings_file)
   
-  if [ ! -f $settings_file ]; then
-    cat $SETTINGS_SOURCE_FILE > $settings_file
-    log "Configuration file $settings_file created."
-  fi
+  # Only proeced if file DOES exist...
+  if [ ! -f $settings_file ]; then return 0; fi
 
   log "Configuring $settings_file..."
   sed -i -r "1,/dbname:/s/dbname: .+?/dbname: $settings_db_name/g" $settings_file
@@ -257,10 +328,10 @@ function warmup_cache() {
 }
 
 #########################################################
-# Set correct permission for TYPO3 app
+# Set correct permission for app files
 #########################################################
 function set_permissions() {
-  chown -R www:www $APP_ROOT
+  chown -R www:www $WEB_SERVER_ROOT/$T3APP_NAME
 }
 
 #########################################################
@@ -332,6 +403,10 @@ function configure_env() {
 
   # Add T3APP_VHOST_NAMES to /etc/hosts inside this container
   echo "127.0.0.1 $T3APP_VHOST_NAMES" | tee -a /etc/hosts
+  # Also add Surf smoke test domain, if Surf deployment is ON
+  if [ "${T3APP_USE_SURF_DEPLOYMENT^^}" = TRUE ]; then
+    echo "127.0.0.1 $T3APP_SURF_SMOKE_TEST_DOMAIN" | tee -a /etc/hosts
+  fi
 
   # Copy .bash_profile and substitute all necessary variables
   cat $BASH_RC_SOURCE_FILE > $BASH_RC_FILE && chown www:www $BASH_RC_FILE

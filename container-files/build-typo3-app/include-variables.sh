@@ -25,6 +25,8 @@ T3APP_NEOS_SITE_PACKAGE=${T3APP_NEOS_SITE_PACKAGE:=false}
 T3APP_NEOS_SITE_PACKAGE_FORCE_REIMPORT=${T3APP_NEOS_SITE_PACKAGE_FORCE_REIMPORT:=false}
 T3APP_ALWAYS_DO_PULL=${T3APP_ALWAYS_DO_PULL:=false}
 T3APP_FORCE_VHOST_CONF_UPDATE=${T3APP_FORCE_VHOST_CONF_UPDATE:=true}
+T3APP_USE_SURF_DEPLOYMENT=${T3APP_USE_SURF_DEPLOYMENT:=false}
+T3APP_SURF_SMOKE_TEST_DOMAIN=${T3APP_SURF_SMOKE_TEST_DOMAIN:="next.$(echo $T3APP_VHOST_NAMES | cut -f 1 -d ' ')"} # by default: next.<1st vhost name from $T3APP_VHOST_NAMES>
 
 # Database ENV variables
 # Note: all DB_* variables are created by Docker when linking this container with MariaDB container (e.g. tutum/mariadb, million12/mariadb) with --link=mariadb-container-id:db option. 

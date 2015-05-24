@@ -13,11 +13,17 @@ source ./include-variables.sh
 # Internal variables - there is no need to change them
 CWD=$(pwd) # Points to /build-typo3-app/ directory, where this script is located
 WEB_SERVER_ROOT="/data/www"
+SURF_ROOT="${WEB_SERVER_ROOT}/${T3APP_NAME}/surf"
 APP_ROOT="${WEB_SERVER_ROOT}/${T3APP_NAME}"
+if [ "${T3APP_USE_SURF_DEPLOYMENT^^}" = TRUE ]; then
+  APP_ROOT="${SURF_ROOT}/releases/initial"
+fi
 INSTALLATION_TYPE="flow" # Default installation type, will be set later on if different one (e.g. Neos) is detected
 SETTINGS_SOURCE_FILE="${CWD}/Settings.yaml"
 VHOST_SOURCE_FILE="${CWD}/vhost.conf"
 VHOST_FILE="/data/conf/nginx/hosts.d/${T3APP_NAME}.conf"
+VHOST_SURF_SOURCE_FILE="${CWD}/vhost-surf.conf"
+VHOST_SURF_FILE="/data/conf/nginx/hosts.d/${T3APP_NAME}-surf.conf"
 MYSQL_CMD_PARAMS="-u$T3APP_DB_USER -p$T3APP_DB_PASS -h $T3APP_DB_HOST -P $T3APP_DB_PORT"
 CONTAINER_IP=$(ip -4 addr show eth0 | grep inet | cut -d/ -f1 | awk '{print $2}')
 BASH_RC_FILE="$WEB_SERVER_ROOT/.bash_profile"
@@ -49,7 +55,15 @@ if [ "${T3APP_DO_INIT^^}" = TRUE ]; then
   log "Configuring TYPO3 ${INSTALLATION_TYPE^^} app..." && log
   
   create_app_db $T3APP_DB_NAME
-  create_settings_yaml "Configuration/Settings.yaml" $T3APP_DB_NAME
+  create_settings_yaml "Configuration/Settings.yaml"
+  update_settings_yaml "Configuration/Settings.yaml" $T3APP_DB_NAME
+  # Production/Settings.yaml is essential when using Surf deployment
+  if [ "${T3APP_USE_SURF_DEPLOYMENT^^}" = TRUE ]; then
+    create_settings_yaml "Configuration/Production/Settings.yaml"
+  fi
+  # Only update if they exist...
+  update_settings_yaml "Configuration/Production/Settings.yaml" $T3APP_DB_NAME
+  update_settings_yaml "Configuration/Development/Settings.yaml" $T3APP_DB_NAME
   
   # DB migration: where are we? Also export it so site build script can access to that info.
   executed_migrations=$(get_db_executed_migrations)
@@ -123,8 +137,10 @@ if [ "${T3APP_DO_INIT_TESTS^^}" = TRUE ]; then
     fi
 
     # Configure FLOW_CONTEXTs for Behat
-    create_settings_yaml "Configuration/Testing/Behat/Settings.yaml" $testing_db_name
-    create_settings_yaml "Configuration/Development/Behat/Settings.yaml" $testing_db_name
+    create_settings_yaml "Configuration/Testing/Behat/Settings.yaml"
+    update_settings_yaml "Configuration/Testing/Behat/Settings.yaml" $testing_db_name
+    create_settings_yaml "Configuration/Development/Behat/Settings.yaml"
+    update_settings_yaml "Configuration/Development/Behat/Settings.yaml" $testing_db_name
     
     # Configure behat.yml files
     behat_configure_yml_files $behat_vhost

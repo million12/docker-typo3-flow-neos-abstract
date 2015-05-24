@@ -25,7 +25,6 @@ T3APP_NEOS_SITE_PACKAGE=${T3APP_NEOS_SITE_PACKAGE:=false}
 T3APP_NEOS_SITE_PACKAGE_FORCE_REIMPORT=${T3APP_NEOS_SITE_PACKAGE_FORCE_REIMPORT:=false}
 T3APP_ALWAYS_DO_PULL=${T3APP_ALWAYS_DO_PULL:=false}
 T3APP_FORCE_VHOST_CONF_UPDATE=${T3APP_FORCE_VHOST_CONF_UPDATE:=true}
-T3APP_PREINSTALL=${T3APP_PREINSTALL:=true}
 
 # Database ENV variables
 # Note: all DB_* variables are created by Docker when linking this container with MariaDB container (e.g. tutum/mariadb, million12/mariadb) with --link=mariadb-container-id:db option. 
@@ -47,4 +46,5 @@ T3APP_USER_BUILD_SCRIPT=${T3APP_USER_BUILD_SCRIPT:="./build.sh"}
 # needs to be shared between pre-install-typo3-app.sh 
 # and configure-typo3-app.sh scripts.
 ########################################################
-INSTALLED_PACKAGE_NAME="typo3-app-package" # Pre-installed /tmp/INSTALLED_PACKAGE_NAME.tgz
+PREINSTALL_WORKING_DIR="/tmp"
+PREINSTALL_PACKAGE_NAME="typo3-app-package" # Pre-installed to /PREINSTALL_WORKING_DIR/PREINSTALL_PACKAGE_NAME.tgz

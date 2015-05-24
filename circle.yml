@@ -26,6 +26,7 @@ dependencies:
     # Build abstract million12/typo3-flow-neos-abstract image
     - docker build --tag=test/typo3-flow-neos-abstract .
     - docker build --tag=test/typo3-flow Tests/Flow/
+    - docker build --tag=test/typo3-flow-no-preinstall Tests/Flow.NoPreinstall
     - docker build --tag=test/typo3-neos Tests/Neos/
 
   post:
@@ -62,6 +63,25 @@ test:
       "
     # Clean up
     - docker rm -f flow || true
+    
+    
+    # ##################################################
+    # Test Flow container without pre-installed app
+    # TODO: test the same, but with Surf deployment ON.
+    # ##################################################
+    - docker run -d --name=flow-no-preinstall -p=8000:80 --link=db:db --env="T3APP_NAME=flow" test/typo3-flow-no-preinstall
+    - docker logs -f flow-no-preinstall > ${CIRCLE_ARTIFACTS}/docker-flow-no-preinstall.log:
+        background: true
+    # Wait till TYPO3 Flow is fully configured
+    - while true; do if grep "nginx entered RUNNING state" ${CIRCLE_ARTIFACTS}/docker-flow-no-preinstall.log; then break; else sleep 1; fi done
+    # Test: do basic front-end tests
+    - curl -L --head http://flow:8000 && curl -s -L http://flow:8000
+    - curl -s -L --head http://flow:8000 | grep "HTTP/1.1 200 OK" && curl -s -L --head http://flow:8000 | grep "X-Flow-Powered" && curl -s -L --head http://flow:8000 | grep "/flow/welcome"
+    - curl -s -L http://flow:8000 | grep "Kickstart your first package"
+    # Note: there's no need to run all unit/functional tests.
+    # The main thing is to test that the application has been correctly installed, without pre-install process.
+    # Clean up
+    - docker rm -f flow-no-preinstall || true
     
     
     # ##################################################
@@ -118,7 +138,8 @@ test:
       " || true    
     # Clean up
     - docker rm -f neos-testing || true
-
+    
+    
     # ##################################################
     # Test case:
     # - run two Flow projects sharing the same data container

@@ -56,14 +56,17 @@ See [README.md](https://github.com/million12/docker-typo3-neos/README.md) from [
 
 ## How does it work
 
-You start with creating a new Docker image based on **million12/typo3-flow-neos-abstract**, using `FROM million12/typo3-flow-neos-abstract:latest` in your Dockerfile. 
+You start with creating a new Docker image based on **million12/typo3-flow-neos-abstract**, using `FROM million12/typo3-flow-neos-abstract` in your Dockerfile. 
 
 #### Build phase
 
-During *build process* of your image, TYPO3 app will be pre-installed using `composer install` and embedded inside the image as a tar achive. Using ENV variables (listed below) you can customise pre-install process: provide custom distribution (e.g. from your GitHub repo) or specify different branch/tag. For detailed info about how this pre-install script works, see [pre-install-typo3-app.sh](container-files/build-typo3-app/pre-install-typo3-app.sh).
-It is posible to not use pre-installed app and compose app on first container start with setting `T3APP_PREINSTALL` variable to false (and not calling `RUN . /build-typo3-app/pre-install-typo3-app.sh` your image).
+Optionally, your whole app can be pre-installed (git clone + composer install) during `docker build` and embedded within the image. That gives a much faster container start (seconds instead of minutes). It also makes the container starts insensitive to outside circumstances, e.g. network issues, timeouts, repository rate limits etc.
 
-In addition, if in the root directory of your project you have executable `build.sh` it will be executed as `build.sh --preinstall`. You can easily add custom build steps there which you want to run during Docker build phase. See `T3APP_USER_BUILD_SCRIPT` variable where you can customise path to that script.
+You can customise the pre-install process using ENV variables listed below. You can provide custom distribution URL (e.g. from your GitHub repo) or specify different branch/tag. For detailed info about how this pre-install script works, see [pre-install-typo3-app.sh](container-files/build-typo3-app/pre-install-typo3-app.sh).
+
+To use this feature, you need to add your Dockerfile line:  
+`RUN . /build-typo3-app/pre-install-typo3-app.sh`
+(just after `ADD container-files /` line).
 
 #### Container launched
 

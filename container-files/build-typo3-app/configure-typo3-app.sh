@@ -1,10 +1,8 @@
 #!/bin/sh
 
 #
-# Initialise/configure TYPO3 app pre-installed during 'docker build'
-# and located in /tmp/INSTALLED_PACKAGE_NAME.tgz (@see install_typo3_app() function)
+# Fully initialise/configure Flow/Neos app
 #
-
 set -e
 set -u
 

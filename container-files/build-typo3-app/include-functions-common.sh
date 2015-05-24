@@ -26,18 +26,20 @@ function configure_composer() {
 # Clone and compose Flow/Neos app
 #
 # Globals:
-#   INSTALLED_PACKAGE_NAME
-#   T3APP_BUILD_BRANCH
 #   T3APP_BUILD_REPO_URL
+#   T3APP_BUILD_BRANCH
 #   T3APP_BUILD_COMPOSER_PARAMS
+# Arguments:
+#   String: target_path, where git clones the repository
 #########################################################
 function clone_and_compose() {
+  local target_path=$1
+  
   # Pull from Gerrit mirror instead of git.typo3.org (workaround of instabillity of git.typo3.org)
   git config --global url."http://git.typo3.org".insteadOf git://git.typo3.org
 
   # Clone TYPO3 app code from provided repository
-  git clone $T3APP_BUILD_REPO_URL $INSTALLED_PACKAGE_NAME
-  cd $INSTALLED_PACKAGE_NAME
+  git clone $T3APP_BUILD_REPO_URL $target_path && cd $target_path
 
   # Do composer install
   git checkout $T3APP_BUILD_BRANCH

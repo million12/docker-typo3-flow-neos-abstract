@@ -36,24 +36,18 @@ function wait_for_db() {
 function install_typo3_app() {
   # Check if app is already installed (when restaring stopped container)
   if [ ! -d $APP_ROOT ]; then
-    if [ "${T3APP_PREINSTALL^^}" = TRUE ]; then
-      log "Installing TYPO3 app (from pre-installed archive)..."
-      cd $WEB_SERVER_ROOT && tar -zxf /tmp/$INSTALLED_PACKAGE_NAME.tgz
-      mv $INSTALLED_PACKAGE_NAME $T3APP_NAME
+    local preinstalled_package_file="$PREINSTALL_WORKING_DIR/$PREINSTALL_PACKAGE_NAME.tgz"
+    local app_root_parent=$(dirname $APP_ROOT) # parent to APP_ROOT (which depends on T3APP_USE_SURF_DEPLOYMENT)
+    
+    mkdir -p $app_root_parent && cd $app_root_parent
+    
+    if [ -f $preinstalled_package_file ]; then
+      log && log "Installing app from pre-installed archive..."
+      tar -zxf $preinstalled_package_file
+      mv $PREINSTALL_PACKAGE_NAME $APP_ROOT
     else
-      log "Installing TYPO3 app..."
-      cd $WEB_SERVER_ROOT
-      # Clone TYPO3 app code from provided repository
-      git clone $T3APP_BUILD_REPO_URL $T3APP_NAME
-      cd $T3APP_NAME
-      # Do composer install
-      git checkout $T3APP_BUILD_BRANCH
-      git log -10 --pretty=format:"%h %an %cr: %s" --graph
-      composer install $T3APP_BUILD_COMPOSER_PARAMS
-      echo
-      echo "TYPO3 app from $T3APP_BUILD_REPO_URL ($T3APP_BUILD_BRANCH) installed."
-      echo $(ls -lh $CWD)
-      echo
+      log "Installing app..."
+      clone_and_compose $APP_ROOT
     fi
   fi
 
@@ -65,7 +59,7 @@ function install_typo3_app() {
   rm -rf Data/Temporary/*
   
   # Debug: show most recent git log messages
-  log "TYPO3 app installed. Most recent commits:"
+  log "App installed. Most recent commits:"
   git log -5 --pretty=format:"%h %an %cr: %s" --graph && echo # Show most recent changes
   
   # If app is/was already installed, pull the most recent code

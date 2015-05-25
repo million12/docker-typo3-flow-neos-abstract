@@ -371,10 +371,12 @@ This image is not only perfect for development purposes, it's **production ready
 * [typostrap.io](https://typostrap.io/) and [tstr.io](https://tstr.io/)
 
 
-## Authors
+## Authors and License
 
 * Marcin 'ryzy' Ryzycki (<marcin@m12.io>)
 * Dmitri Pisarev (<dimaip@gmail.com>)
+
+Licensed under: The MIT License (MIT)
 
 ---
 

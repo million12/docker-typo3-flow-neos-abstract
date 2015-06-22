@@ -7,7 +7,7 @@ This is a Docker image [million12/typo3-flow-neos-abstract](https://registry.hub
 
 * Use directly this image for standard Flow/Neos apps.
 * Easily create custom image based on this one, to create customised setup.
-* Pre-install Flow/Neos app and embed it inside the image to speed up and bullet-proof container lunch process.
+* Pre-install Flow/Neos app and embed it inside the image to speed up and bullet-proof container launch process.
 * Full customisation via ENV variables, e.g. custom (private) repositories, custom site package.
 * [Surf](http://docs.typo3.org/surf/TYPO3SurfDocumentation/) deployment support.
 * Custom build scripts, user hooks available for a few installation/configuration steps.

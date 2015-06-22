@@ -21,6 +21,16 @@ function configure_composer() {
   composer config --global discard-changes true
 }
 
+#########################################################
+# Configure git, so all git commands always works.
+# Otherwise git shouts about missing configuration.
+# Note: the actual values doesn't matter, most important 
+# is that they are configured.
+#########################################################
+function configure_git() {
+  git config --global user.email "${T3APP_USER_NAME}@local"
+  git config --global user.name $T3APP_USER_NAME
+}
 
 #########################################################
 # Clone and compose Flow/Neos app

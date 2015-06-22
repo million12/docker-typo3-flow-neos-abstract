@@ -393,13 +393,8 @@ function behat_configure_yml_files() {
 #   T3APP_USER_NAME
 #########################################################
 function configure_env() {
+  configure_git
   configure_composer
-
-  # Configure git
-  # To make sure git stash/pull always works. Otherwise git shouts about missing configuration.
-  # Note: the actual values doesn't matter, most important is that they are configured.
-  git config --global user.email "${T3APP_USER_NAME}@local"
-  git config --global user.name $T3APP_USER_NAME
 
   # Add T3APP_VHOST_NAMES to /etc/hosts inside this container
   echo "127.0.0.1 $T3APP_VHOST_NAMES" | tee -a /etc/hosts

@@ -23,6 +23,7 @@ log
 log "Installing TYPO3 app from $T3APP_BUILD_REPO_URL ($T3APP_BUILD_BRANCH) repository..."
 log
 
+configure_git
 configure_composer
 clone_and_compose $PREINSTALL_WORKING_DIR/$PREINSTALL_PACKAGE_NAME
 

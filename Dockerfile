@@ -9,13 +9,13 @@ ADD container-files /
 
 #
 # This is "abstract" million12/typo3-flow-neos-abstract image and it doesn't do anything on its own.
-# It is designed to easily build sub-images which will run any TYPO3 Flow and/or Neos version.
+# It is designed to easily build sub-images which will run any Flow and/or Neos CMS version.
 # See README.md for more information.
 #
 # Configure image build with following ENV variables:
 # Checkout to specified branch/tag name
 #ENV T3APP_BUILD_BRANCH 2.0
-# Repository for installed TYPO3 Flow or Neos distribution 
+# Repository for installed Flow or Neos CMS distribution
 #ENV T3APP_BUILD_REPO_URL git://git.typo3.org/Neos/Distributions/Base.git
 #
 # If you need to access your private repository, you'll need to add ssh keys to the image

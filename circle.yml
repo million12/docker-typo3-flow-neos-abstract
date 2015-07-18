@@ -57,14 +57,14 @@ test:
       docker run -ti --volumes-from=flow --link=flow:web --link=db:db million12/php-testing "
         su www -c \"
           cd ~/flow; \
-          echo -e '\n\n======== RUNNING TYPO3 FLOW TESTS =======\n\n'; \
+          echo -e '\n\n======== RUNNING FLOW TESTS =======\n\n'; \
           bin/phpunit -c Build/BuildEssentials/PhpUnit/UnitTests.xml; \
           bin/phpunit -c Build/BuildEssentials/PhpUnit/FunctionalTests.xml
         \"
       "
     # Clean up
     - docker rm -f flow || true
-    
+
     # ##################################################
     # Flow with T3APP_USE_SURF_DEPLOYMENT=TRUE
     # ##################################################
@@ -96,15 +96,15 @@ test:
       docker run -ti --volumes-from=flow-surf --link=flow-surf:web --link=db:db million12/php-testing "
         su www -c \"
           cd ~/flow/surf/releases/current; \
-          echo -e '\n\n======== RUNNING TYPO3 FLOW TESTS =======\n\n'; \
+          echo -e '\n\n======== RUNNING FLOW TESTS =======\n\n'; \
           bin/phpunit -c Build/BuildEssentials/PhpUnit/UnitTests.xml; \
           bin/phpunit -c Build/BuildEssentials/PhpUnit/FunctionalTests.xml
         \"
       "
     # Clean up
     - docker rm -f flow-surf || true
-    
-    
+
+
     # ##################################################
     # Test Flow container without pre-installed app
     # ##################################################
@@ -121,8 +121,8 @@ test:
     # The main thing is to test that the application has been correctly installed, without pre-install process.
     # Clean up
     - docker rm -f flow-no-preinstall || true
-    
-    
+
+
     # ##################################################
     # Test Flow container without pre-installed app
     # and with T3APP_USE_SURF_DEPLOYMENT=TRUE
@@ -140,13 +140,13 @@ test:
     # The main thing is to test that the application has been correctly installed, without pre-install process.
     # Clean up
     - docker rm -f flow-surf-no-preinstall || true
-    
-    
+
+
     # ##################################################
     # Build TYPO3 Neos container and do some basic front-end tests
     # Also test agains custom DB params (ie. hostname, user, pass)
     # ##################################################
-    - | 
+    - |
       docker run -d --name=neos -p=8100:80 --link=db:db.local \
         --env="T3APP_NAME=neos" \
         --env="T3APP_DB_HOST=db.local" \
@@ -158,17 +158,18 @@ test:
         background: true
     # Wait till TYPO3 Neos is fully configured
     - while true; do if grep "nginx entered RUNNING state" ${CIRCLE_ARTIFACTS}/docker-neos.log; then break; else sleep 1; fi done
-    # Test: do basic front-end tests 
+    # Test: do basic front-end tests
     - curl -L --head http://neos:8100 && curl -s -L http://neos:8100
     - curl -s --head http://neos:8100 | grep "HTTP/1.1 200 OK" && curl -s --head http://neos:8100 | grep "X-Flow-Powered"
-    - curl -s http://neos:8100 | grep "Power when you need it" && curl -s http://neos:8100 | grep "Powered by TYPO3 Neos"
-    - curl -s -L http://neos:8100/neos | grep "TYPO3 Neos Login"
+    - curl -s http://neos:8100 | grep "Power when you need it"
+    - curl -s http://neos:8100 | grep "Powered by Neos &amp; Flow"
+    - curl -s -L http://neos:8100/neos | grep "Neos comes with"
     # Test: check if Neos is installed in $T3APP_NAME directory
     - docker run -ti --volumes-from=neos million12/php-testing "su www -c \"cd && ls -al neos\""
     # Clean up
     - docker rm -f neos || true
-    
-    
+
+
     # ###################################################################
     # Launch Neos container again, but do only initialisation for testing
     # ###################################################################
@@ -178,9 +179,9 @@ test:
     # Wait till TYPO3 Neos is fully configured
     - while true; do if grep "nginx entered RUNNING state" -a ${CIRCLE_ARTIFACTS}/docker-neos-testing.log; then break; else sleep 1; fi done
     - curl -L --head http://neos:8200 && curl -s -L http://neos:8200
-    
-    # Run all Neos tests (unit, functional, behat), but do not fail the build in case of 
-    # any problems there. These are vendor tests and errors there 
+
+    # Run all Neos tests (unit, functional, behat), but do not fail the build in case of
+    # any problems there. These are vendor tests and errors there
     # do not indicate that this Docker image is faulty.
     - |
       docker run -ti --volumes-from=neos-testing --link=neos-testing:web --link=db:db million12/php-testing "
@@ -188,22 +189,22 @@ test:
         echo \$WEB_PORT_80_TCP_ADDR \$WEB_ENV_T3APP_VHOST_NAMES >> /etc/hosts && cat /etc/hosts && \
         su www -c \"
           cd ~/typo3-app; \
-          echo -e '\n\n======== RUNNING TYPO3 NEOS TESTS =======\n\n'; \
+          echo -e '\n\n======== RUNNING NEOS TESTS =======\n\n'; \
           bin/phpunit -c Build/BuildEssentials/PhpUnit/UnitTests.xml; \
           bin/phpunit -c Build/BuildEssentials/PhpUnit/FunctionalTests.xml; \
           bin/behat -c Packages/Application/TYPO3.Neos/Tests/Behavior/behat.yml
         \"
-      " || true    
+      " || true
     # Clean up
     - docker rm -f neos-testing || true
-    
-    
+
+
     # ##################################################
     # Test case:
     # - run two Flow projects sharing the same data container
     # - as a result, when 2nd container is launched it will contain two configured vhost,
     #   for both projects.
-    # We do that to make sure that these 2 different projects, in a separate directories 
+    # We do that to make sure that these 2 different projects, in a separate directories
     # and with separete db work together correctly (i.e. Nginx starts with these 2 vhosts etc).
     # ##################################################
     - docker run -d -v /data --name=flow-multi-data busybox:latest
@@ -217,7 +218,7 @@ test:
     - docker logs -f flow-multi-2 > ${CIRCLE_ARTIFACTS}/docker-flow-muilti-2.log 2>&1:
         background: true
     - while true; do if grep "nginx entered RUNNING state" ${CIRCLE_ARTIFACTS}/docker-flow-muilti-2.log; then break; else sleep 1; fi done
-    
+
     # make some hardcoded change in a demo package, so we can test against it
     # We replace 'Kickstart' word with 'Bootstrap' in the welcome screen
     - |
@@ -226,14 +227,14 @@ test:
         sed -i -r "s#Kickstart#Bootstrap#g" Packages/Framework/TYPO3.Welcome/Resources/Private/Templates/Standard/Index.html; \
         FLOW_CONTEXT=Production ./flow flow:cache:flush && ./flow cache:warmup
       \""
-    
+
     # Test: do basic front-end tests against the 2nd container
     - curl -L --head http://typo3-app:8002 && curl -s -L http://typo3-app:8002 # just to see the output
     - curl -L --head http://flow:8002 && curl -s -L http://flow:8002 # just to see the output
-    
+
     - curl -s -L --head http://typo3-app:8002 | grep "HTTP/1.1 200 OK" && curl -s -L --head http://typo3-app:8002 | grep "X-Flow-Powered" && curl -s -L --head http://typo3-app:8002 | grep "/flow/welcome"
     - curl -s -L --head http://flow:8002 | grep "HTTP/1.1 200 OK" && curl -s -L --head http://flow:8002 | grep "X-Flow-Powered" && curl -s -L --head http://flow:8002 | grep "/flow/welcome"
-    
+
     - curl -s -L http://typo3-app:8002 | grep "Kickstart your first package"
     - curl -s -L http://flow:8002 | grep "Bootstrap your first package"
 

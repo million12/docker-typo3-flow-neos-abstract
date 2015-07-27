@@ -29,7 +29,7 @@ T3APP_USE_SURF_DEPLOYMENT=${T3APP_USE_SURF_DEPLOYMENT:=false}
 T3APP_SURF_SMOKE_TEST_DOMAIN=${T3APP_SURF_SMOKE_TEST_DOMAIN:="next.$(echo $T3APP_VHOST_NAMES | cut -f 1 -d ' ')"} # by default: next.<1st vhost name from $T3APP_VHOST_NAMES>
 
 # Database ENV variables
-# Note: all DB_* variables are created by Docker when linking this container with MariaDB container (e.g. tutum/mariadb, million12/mariadb) with --link=mariadb-container-id:db option. 
+# Note: all DB_* variables are created by Docker when linking this container with MariaDB container (e.g. tutum/mariadb, million12/mariadb) with --link=mariadb-container-id:db option.
 T3APP_DB_HOST=${T3APP_DB_HOST:=${DB_PORT_3306_TCP_ADDR:="db"}}      # 1st take T3APP_DB_HOST, then DB_PORT_3306_TCP_ADDR (linked db container), then fallback to 'db' host
 T3APP_DB_PORT=${T3APP_DB_PORT:=${DB_PORT_3306_TCP_PORT:="3306"}}    # 1st take T3APP_DB_PORT, then DB_PORT_3306_TCP_PORT (linked db container), then fallback to the default '3306' port
 T3APP_DB_USER=${T3APP_DB_USER:=${DB_ENV_MARIADB_USER:="admin"}}     # 1st take T3APP_DB_USER, then DB_ENV_MARIADB_USER (linked db container), then fallback to the default 'admin' user
@@ -45,7 +45,7 @@ T3APP_USER_BUILD_SCRIPT=${T3APP_USER_BUILD_SCRIPT:="./build.sh"}
 ########################################################
 # Internal variables - there is no need to change them
 # We put here only these internal variables, which
-# needs to be shared between pre-install-typo3-app.sh 
+# needs to be shared between pre-install-typo3-app.sh
 # and configure-typo3-app.sh scripts.
 ########################################################
 PREINSTALL_WORKING_DIR="/tmp"

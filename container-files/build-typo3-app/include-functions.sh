@@ -18,7 +18,7 @@ function wait_for_db() {
     if [[ $res -ne 0 ]]; then log "Waiting for DB service ($T3APP_DB_HOST:$T3APP_DB_PORT username:$T3APP_DB_USER)..." && sleep 2; fi
   done
   set -e
-  
+
   # Display DB status...
   log "Database status:"
   mysql $MYSQL_CMD_PARAMS --execute "status"
@@ -38,9 +38,9 @@ function install_typo3_app() {
   if [ ! -d $APP_ROOT ]; then
     local preinstalled_package_file="$PREINSTALL_WORKING_DIR/$PREINSTALL_PACKAGE_NAME.tgz"
     local app_root_parent=$(dirname $APP_ROOT) # parent to APP_ROOT (which depends on T3APP_USE_SURF_DEPLOYMENT)
-    
+
     mkdir -p $app_root_parent && cd $app_root_parent
-    
+
     if [ -f $preinstalled_package_file ]; then
       log && log "Installing app from pre-installed archive..."
       tar -zxf $preinstalled_package_file
@@ -50,22 +50,22 @@ function install_typo3_app() {
       clone_and_compose $APP_ROOT
     fi
   fi
-  
+
   if [ "${T3APP_USE_SURF_DEPLOYMENT^^}" = TRUE ]; then
     create_surf_directory_structure
   fi
 
   cd $APP_ROOT
-  
+
   # Make sure cache is cleared for all contexts. This is empty during the 1st container launch,
   # but, when container is re-run (with shared data volume), not clearing it can cause random issues
   # (e.g. due to changes in the newly pulled code).
   rm -rf Data/Temporary/*
-  
+
   # Debug: show most recent git log messages
   log "App installed. Most recent commits:"
   git log -5 --pretty=format:"%h %an %cr: %s" --graph && echo # Show most recent changes
-  
+
   # If app is/was already installed, pull the most recent code
   if [ "${T3APP_ALWAYS_DO_PULL^^}" = TRUE ]; then
     install_typo3_app_do_pull
@@ -93,22 +93,22 @@ function install_typo3_app_do_pull() {
     git status
     git stash --include-untracked
   fi
-  
+
   # Allow switching between branches for running containers
   # E.g. user can provide different branch for `docker build` (in Dockerfile)
   # and different when launching the container.
   git fetch && git checkout --force $T3APP_BUILD_BRANCH
-  
+
   if [[ ! $(git pull -f) ]]; then
     log "git pull failed. Trying once again with 'git reset --hard origin/${T3APP_BUILD_BRANCH}'..."
     git reset --hard origin/$T3APP_BUILD_BRANCH
   fi
-  
+
   log "Most recent commits (after newest codebase has been pulled):"
   git log -10 --pretty=format:"%h %an %cr: %s" --graph
-  
+
   set -e # restore -e setting
-  
+
   # After code pull composer.lock could have changed. This will re-install things...
   composer install $T3APP_BUILD_COMPOSER_PARAMS
 }
@@ -123,18 +123,18 @@ function create_surf_directory_structure() {
   mkdir -p $SURF_ROOT/{cache,releases}
   mkdir -p $SURF_ROOT/shared/Configuration
   mkdir -p $SURF_ROOT/shared/Data/{Logs,Persistent}
-  
+
   # During container start the app has been installed to 'initial' directory
-  # Link it to 'current', Surf's current (live) release. 
+  # Link it to 'current', Surf's current (live) release.
   cd $SURF_ROOT/releases
   ln -sfn initial current
-  
+
   # Symlink Data/Logs, Data/Persistent to shared Surf directories
   cd $APP_ROOT
   mkdir -p Data
   ln -sf ../../../shared/Data/Logs Data/Logs
   ln -sf ../../../shared/Data/Persistent Data/Persistent
-  
+
   # Move Production context to Surf shared directory - this is where Surf expects it
   cd $APP_ROOT/Configuration
   mv Production ../../../shared/Configuration/.
@@ -182,15 +182,15 @@ function create_vhost_conf() {
 
   sed -i -r "s#%server_name%#${vhost_names}#g" $VHOST_FILE
   sed -i -r "s#%root%#${APP_ROOT}#g" $VHOST_FILE
-  
+
   # Configure redirect: www to non-www
   # @TODO: make it configurable via env var
   # @TODO: make possible reversed behaviour (non-www to www)
   sed -i -r "s#%server_name_primary%#${vhost_names_arr[0]}#g" $VHOST_FILE
-  
+
   cat $VHOST_FILE && echo '----------------------------------------------'
   log "Nginx vhost configured."
-  
+
   if [ "${T3APP_USE_SURF_DEPLOYMENT^^}" = TRUE ]; then
     create_vhost_conf_for_surf
   fi
@@ -212,7 +212,7 @@ function create_vhost_conf_for_surf() {
   cat $VHOST_SURF_SOURCE_FILE > $VHOST_SURF_FILE
   sed -i -r "s#%server_name%#${T3APP_SURF_SMOKE_TEST_DOMAIN}#g" $VHOST_SURF_FILE
   sed -i -r "s#%root%#${SURF_ROOT}/releases/next#g" $VHOST_SURF_FILE
-  
+
   cat $VHOST_SURF_FILE && echo '----------------------------------------------'
   log "Nginx vhost for Surf configured."
 }
@@ -226,7 +226,7 @@ function create_vhost_conf_for_surf() {
 #########################################################
 function create_settings_yaml() {
   local settings_file=$1
-  
+
   # Only proceed if file DOES NOT exist...
   if [ -f $settings_file ]; then return 0; fi
 
@@ -250,7 +250,7 @@ function create_settings_yaml() {
 function update_settings_yaml() {
   local settings_file=$1
   local settings_db_name=$2
-  
+
   # Only proeced if file DOES exist...
   if [ ! -f $settings_file ]; then return 0; fi
 
@@ -336,13 +336,13 @@ function set_permissions() {
 
 #########################################################
 # Get virtual host name used for Behat testing.
-# This host name has in format 'behat.dev.[BASE_DOMAIN]' 
+# This host name has in format 'behat.dev.[BASE_DOMAIN]'
 # We relay on the fact that Nginx is configured that
 # it sets FLOW_CONTEXT to Development when 'dev' string
 # is detected in hostname and respectively
 # Development/Behat if 'behat' string is detected.
 # Globals:
-#   T3APP_VHOST_NAMES: all vhost name(s), space-separated  
+#   T3APP_VHOST_NAMES: all vhost name(s), space-separated
 #########################################################
 function behat_get_vhost() {
   behat_vhost=""
@@ -351,13 +351,13 @@ function behat_get_vhost() {
       behat_vhost=$vhost
     fi
   done
-  
+
   echo $behat_vhost
 }
 
 #########################################################
 # Iterate through all installed packages in Packages/
-# look up for */Tests/Behavior/behat.yml[.dist] files 
+# look up for */Tests/Behavior/behat.yml[.dist] files
 # and set there behat vhost in base_url: variable.
 # Arguments:
 #   String: vhost used for Behat tests
@@ -380,7 +380,7 @@ function behat_configure_yml_files() {
 
 #########################################################
 # Configure environment (e.g. PATH).
-# Configure .bash_profile for 'www' user with all 
+# Configure .bash_profile for 'www' user with all
 # necessary scripts/settings like /etc/hosts settings.
 # Globals:
 #   APP_ROOT

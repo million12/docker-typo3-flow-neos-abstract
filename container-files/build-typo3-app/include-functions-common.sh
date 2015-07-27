@@ -16,7 +16,7 @@ log() {
 function configure_composer() {
   # Increase timeout for composer complete install - it might take a while sometimes to install whole Flow/Neos
   composer config --global process-timeout 1800
-  
+
   # This is an automated build, so if there are any changes in vendors packages, discard them w/o asking
   composer config --global discard-changes true
 }
@@ -24,7 +24,7 @@ function configure_composer() {
 #########################################################
 # Configure git, so all git commands always works.
 # Otherwise git shouts about missing configuration.
-# Note: the actual values doesn't matter, most important 
+# Note: the actual values doesn't matter, most important
 # is that they are configured.
 #########################################################
 function configure_git() {
@@ -44,7 +44,7 @@ function configure_git() {
 #########################################################
 function clone_and_compose() {
   local target_path=$1
-  
+
   # Pull from Gerrit mirror instead of git.typo3.org (workaround of instabillity of git.typo3.org)
   git config --global url."http://git.typo3.org".insteadOf git://git.typo3.org
 
@@ -81,7 +81,7 @@ function hook_user_build_script() {
   else
     return 0
   fi
-  
+
   log && log "Running user hook script with param '$param':"
   if [[ -n "$param" && ! $(grep -- $param $T3APP_USER_BUILD_SCRIPT) ]]; then
     log "No param '$param' found in $T3APP_USER_BUILD_SCRIPT script content. Skipping..."

@@ -284,7 +284,7 @@ Key things to know:
 * **`--post-build`**: called at the end of `docker-build` phase, just after initial composer install. Note: in previous version of this package it was called `--preinstall`, which still works for backward-compatibility reasons, but it will be removed in future versions.  
   **Example usage:** ideal place to install any software needed for your project. It will be added to built Docker image.
 
-* **`--post-install`**: Flow/Neos app (source code) has been installed, but application is not yet fully initialised (Settings.yaml not configured, DB not migrated, site package not installed).
+* **`--post-install`**: Flow/Neos app's source code has been installed (incl. code pull if `T3APP_ALWAYS_DO_PULL=true` is set, incl. creating Surf directory structure if `T3APP_USE_SURF_DEPLOYMENT=true` is set). But the application is not yet fully initialised, i.e. Settings.yaml is not configured, DB is not migrated, site package is not installed)
 
 * **`--post-settings`**: Settings.yaml is configured with DB credentials (TYPO3.Flow.persistence.backendOptions). Note: at this stage you have access to runtime variable, `RUNTIME_EXECUTED_MIGRATIONS` (see above).  
   Ideal place to do extra configuration of Settings.yaml.

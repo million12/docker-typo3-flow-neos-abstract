@@ -49,10 +49,10 @@ function install_typo3_app() {
       log && log "Installing app (fresh install)..."
       clone_and_compose $APP_ROOT
     fi
-  fi
 
-  if [ "${T3APP_USE_SURF_DEPLOYMENT^^}" = TRUE ]; then
-    create_surf_directory_structure
+    if [ "${T3APP_USE_SURF_DEPLOYMENT^^}" = TRUE ]; then
+      create_surf_directory_structure
+    fi
   fi
 
   cd $APP_ROOT

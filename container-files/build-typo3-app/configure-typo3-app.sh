@@ -16,7 +16,7 @@ WEB_SERVER_ROOT="/data/www"
 SURF_ROOT="${WEB_SERVER_ROOT}/${T3APP_NAME}/surf"
 APP_ROOT="${WEB_SERVER_ROOT}/${T3APP_NAME}"
 if [ "${T3APP_USE_SURF_DEPLOYMENT^^}" = TRUE ]; then
-  APP_ROOT="${SURF_ROOT}/releases/initial"
+  APP_ROOT="${SURF_ROOT}/releases/current"
 fi
 INSTALLATION_TYPE="flow" # Default installation type, will be set later on if different one (e.g. Neos) is detected
 SETTINGS_SOURCE_FILE="${CWD}/Settings.yaml"

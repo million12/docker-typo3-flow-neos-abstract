@@ -3,7 +3,7 @@
 ###############################################
 # ENV variables used during image build phase
 ###############################################
-T3APP_BUILD_REPO_URL=${T3APP_BUILD_REPO_URL:="git://git.typo3.org/Flow/Distributions/Base.git"}
+T3APP_BUILD_REPO_URL=${T3APP_BUILD_REPO_URL:="https://github.com/neos/flow-base-distribution.git"}
 T3APP_BUILD_BRANCH=${T3APP_BUILD_BRANCH:="master"}
 T3APP_BUILD_COMPOSER_PARAMS=${T3APP_BUILD_COMPOSER_PARAMS:="--prefer-source --optimize-autoloader"}
 

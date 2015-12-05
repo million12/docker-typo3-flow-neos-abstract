@@ -142,8 +142,8 @@ ENV T3APP_BUILD_BRANCH 2.2.2
 ENV T3APP_BUILD_REPO_URL https://github.com/you/your-flow-or-neos-app.git
 
 # ENV: Custom composer install params
-# Default: --dev --prefer-source
-ENV T3APP_BUILD_COMPOSER_PARAMS --no-dev --prefer-dist --optimize-autoloader
+# Default: --prefer-dist --optimize-autoloader
+ENV T3APP_BUILD_COMPOSER_PARAMS --no-dev --prefer-source --optimize-autoloader
 
 # Run pre-install script
 RUN . /build-typo3-app/pre-install-typo3-app.sh
@@ -185,7 +185,7 @@ Default: `T3APP_BUILD_BRANCH=master`
 Branch or tag name to checkout during pre-install phase. For instance, to install default TYPO3 Neos base distribution, but one of stable or older version, you might want to override it with e.g. `1.1.2`.
 
 **T3APP_BUILD_COMPOSER_PARAMS**  
-Default: `T3APP_BUILD_COMPOSER_PARAMS=--dev --prefer-source`  
+Default: `T3APP_BUILD_COMPOSER_PARAMS=--prefer-dist --optimize-autoloader`  
 Extra parameters for `composer install`. You might override it with e.g. `--no-dev --prefer-dist --optimize-autoloader` on production.
 
 ### Runtime variables

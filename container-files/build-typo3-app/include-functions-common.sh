@@ -45,9 +45,6 @@ function configure_git() {
 function clone_and_compose() {
   local target_path=$1
 
-  # Pull from Gerrit mirror instead of git.typo3.org (workaround of instabillity of git.typo3.org)
-  git config --global url."http://git.typo3.org".insteadOf git://git.typo3.org
-
   # Clone TYPO3 app code from provided repository
   git clone $T3APP_BUILD_REPO_URL $target_path && cd $target_path
 

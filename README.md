@@ -29,7 +29,7 @@ As you can see, it can be like Homestead (vide [Laravel Homestead](http://larave
 docker run -d --name=db --env="MARIADB_PASS=my-pass" million12/mariadb
 docker run -d --name=flow -p=8080:80 --link=db:db \
     --env="T3APP_VHOST_NAMES=flow dev.flow" \
-    --env="T3APP_BUILD_REPO_URL=https://git.typo3.org/Flow/Distributions/Base.git" \
+    --env="T3APP_BUILD_REPO_URL=https://github.com/neos/flow-base-distribution.git" \
     --env="T3APP_BUILD_BRANCH=3.0" \
     million12/typo3-flow-neos-abstract
 ```
@@ -43,7 +43,7 @@ Note: in the example we link with `db` container, so `flow` container can read i
 docker run -d --name=db --env="MARIADB_PASS=my-pass" million12/mariadb
 docker run -d --name=neos -p=8080:80 --link=db:db \
     --env="T3APP_VHOST_NAMES=neos neos.flow" \
-    --env="T3APP_BUILD_REPO_URL=https://git.typo3.org/Neos/Distributions/Base.git" \
+    --env="T3APP_BUILD_REPO_URL=https://github.com/neos/neos-base-distribution.git" \
     --env="T3APP_BUILD_BRANCH=2.0" \
     million12/typo3-flow-neos-abstract
 ```
@@ -138,8 +138,8 @@ FROM million12/typo3-flow-neos-abstract:latest
 ENV T3APP_BUILD_BRANCH 2.2.2
 
 # ENV: Repository for installed TYPO3 app
-# Default: git://git.typo3.org/Flow/Distributions/Base.git
-ENV T3APP_BUILD_REPO_URL https://github.com/you/your-typo3-flow-app.git
+# Default: https://github.com/neos/flow-base-distribution.git
+ENV T3APP_BUILD_REPO_URL https://github.com/you/your-flow-or-neos-app.git
 
 # ENV: Custom composer install params
 # Default: --dev --prefer-source
@@ -177,8 +177,8 @@ Note: the default values are **on purpose not defined in Dockerfile** as definin
 These are variables relevant during build process of your custom image:
 
 **T3APP_BUILD_REPO_URL**  
-Default: `T3APP_BUILD_REPO_URL=git://git.typo3.org/Flow/Distributions/Base.git`  
-By default it points to TYPO3 Flow base distribution. Override it to `git://git.typo3.org/Neos/Distributions/Base.git` to install TYPO3 Neos base distribution. Provide your own repository to install your own Flow/Neos distribution. The repository can be private: read more above for an example how to configure/access private repositories. Remember to use git url in SSH format for private repositories, i.e. *git@github.com:user/package.git*.
+Default: `T3APP_BUILD_REPO_URL=https://github.com/neos/flow-base-distribution.git`  
+By default it points to TYPO3 Flow base distribution. Override it to `https://github.com/neos/neos-base-distribution.git` to install TYPO3 Neos base distribution. Provide your own repository to install your own Flow/Neos distribution. The repository can be private: read more above for an example how to configure/access private repositories. Remember to use git url in SSH format for private repositories, i.e. *git@github.com:user/package.git*.
 
 **T3APP_BUILD_BRANCH**  
 Default: `T3APP_BUILD_BRANCH=master`  

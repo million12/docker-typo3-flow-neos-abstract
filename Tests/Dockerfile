@@ -13,7 +13,7 @@ ADD container-files/build-typo3-app/include-functions-common.sh /build-typo3-app
 ADD container-files/build-typo3-app/pre-install-typo3-app.sh /build-typo3-app/pre-install-typo3-app.sh
 
 ENV \
-  T3APP_BUILD_REPO_URL=https://git.typo3.org/Neos/Distributions/Base.git \
+  T3APP_BUILD_REPO_URL=https://github.com/neos/neos-base-distribution.git \
   T3APP_BUILD_BRANCH=2.0 \
   T3APP_NEOS_SITE_PACKAGE=TYPO3.NeosDemoTypo3Org
 

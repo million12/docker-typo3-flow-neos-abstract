@@ -324,12 +324,6 @@ function neos_site_package_prune() {
 #########################################################
 function warmup_cache() {
   FLOW_CONTEXT=$@ ./flow flow:cache:flush --force;
-
-  # Workaround against lock not being released in Production context
-  # when flushing caches with --force param.
-  # @TODO: can be removed once this change https://review.typo3.org/#/c/41899/ is released
-  rm -f /tmp/*Flow.lock
-
   FLOW_CONTEXT=$@ ./flow cache:warmup;
 }
 
@@ -338,6 +332,9 @@ function warmup_cache() {
 #########################################################
 function set_permissions() {
   chown -R www:www $WEB_SERVER_ROOT/$T3APP_NAME
+
+  # Make sure *Flow.lock and *FlowIsLocked files have the right permissions
+  chown -R www:www $PHP_TMPDIR/*_Flow.lock $PHP_TMPDIR/*_FlowIsLocked
 }
 
 #########################################################

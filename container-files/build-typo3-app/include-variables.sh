@@ -50,3 +50,4 @@ T3APP_USER_BUILD_SCRIPT=${T3APP_USER_BUILD_SCRIPT:="./build.sh"}
 ########################################################
 PREINSTALL_WORKING_DIR="/tmp"
 PREINSTALL_PACKAGE_NAME="typo3-app-package" # Pre-installed to /PREINSTALL_WORKING_DIR/PREINSTALL_PACKAGE_NAME.tgz
+PHP_TMPDIR="/data/tmp/php"

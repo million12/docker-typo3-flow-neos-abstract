@@ -33,6 +33,7 @@ BASH_RC_SOURCE_FILE="$CWD/.bash_profile"
 
 # Configure some environment aspects (PATH, /etc/hosts, 'www' user profile etc)
 configure_env
+configure_ssh_key_for_www_user
 
 #
 # TYPO3 app installation

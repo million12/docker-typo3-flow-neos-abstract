@@ -258,6 +258,11 @@ Set to TRUE to use directory layout compatible with Surf.
 Default: `T3APP_SURF_SMOKE_TEST_DOMAIN=next.<the 1st domain from $T3APP_VHOST_NAMES>`  
 If you use `T3APP_USE_SURF_DEPLOYMENT`, this is the extra domain which will be configured in Nginx (and aliased to 127.0.0.1 inside container). It's needed if you want to use Surf smoke test task `typo3.surf:test:httptest`.
 
+**T3APP_SSH_REPO_KEY**  
+Default: `T3APP_SSH_REPO_KEY=/gh-repo-key`  
+Useful when you embed own SSH key to access private Git repository. When set AND the file exist, it will be copied to `www` home directory, to `/data/www/.ssh/id_rsa` so, when you work as `www` user inside container, you can pull and push changes from/to your repository. See [Accessing private repositories](#accessing-private-repositories-example) section for more information.
+
+
 ### Other (runtime/internal) variables
 
 These are variables which are set internally when container starts. You might want to use them e.g. inside your site build hook script (see `T3APP_USER_BUILD_SCRIPT`).

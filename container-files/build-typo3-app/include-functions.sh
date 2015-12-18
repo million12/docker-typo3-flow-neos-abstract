@@ -411,3 +411,21 @@ function configure_env() {
   sed -i -r "s#%T3APP_NAME%#${T3APP_NAME}#g" $BASH_RC_FILE
   sed -i -r "s#%T3APP_VHOST_NAMES%#${T3APP_VHOST_NAMES}#g" $BASH_RC_FILE
 }
+
+
+#########################################################
+# Copy REPO_PRIV_KEY to 'www' user home dir,
+# so the user can do git pull/push.
+#
+# Globals:
+#   WEB_SERVER_ROOT
+#   T3APP_SSH_REPO_KEY
+#########################################################
+function configure_ssh_key_for_www_user() {
+  if [ -f $T3APP_SSH_REPO_KEY ]; then
+    local ssh_dir="$WEB_SERVER_ROOT/.ssh"
+    local ssh_key="$ssh_dir/id_rsa"
+    mkdir -p $ssh_dir && chown www:www $ssh_dir
+    cp -f $T3APP_SSH_REPO_KEY $ssh_key && chown www:www $ssh_key && chmod 600 $ssh_key
+  fi
+}

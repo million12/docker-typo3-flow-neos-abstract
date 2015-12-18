@@ -40,6 +40,9 @@ T3APP_DB_NAME=${T3APP_DB_NAME:=${T3APP_NAME//[^a-zA-Z0-9]/_}}       # DB name: F
 # will be called at the end of the setup process.
 T3APP_USER_BUILD_SCRIPT=${T3APP_USER_BUILD_SCRIPT:="./build.sh"}
 
+# Location of SSH private key which is needed to acces your private Git repository
+# @see configure_ssh_key_for_www_user()
+T3APP_SSH_REPO_KEY=${T3APP_SSH_KEY_FOR_WWW_USER:="/gh-repo-key"}
 
 
 ########################################################

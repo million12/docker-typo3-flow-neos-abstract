@@ -1,7 +1,7 @@
 #
 # million12/typo3-flow-neos-abstract
 #
-FROM million12/nginx-php:latest
+FROM million12/nginx-php:php56
 MAINTAINER Marcin Ryzycki marcin@m12.io
 
 RUN \

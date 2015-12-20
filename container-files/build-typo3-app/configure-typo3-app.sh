@@ -18,7 +18,6 @@ APP_ROOT="${WEB_SERVER_ROOT}/${T3APP_NAME}"
 if [ "${T3APP_USE_SURF_DEPLOYMENT^^}" = TRUE ]; then
   APP_ROOT="${SURF_ROOT}/releases/current"
 fi
-INSTALLATION_TYPE="flow" # Default installation type, will be set later on if different one (e.g. Neos) is detected
 SETTINGS_SOURCE_FILE="${CWD}/Settings.yaml"
 VHOST_SOURCE_FILE="${CWD}/vhost.conf"
 VHOST_FILE="/data/conf/nginx/hosts.d/${T3APP_NAME}.conf"
@@ -30,7 +29,6 @@ BASH_RC_FILE="$WEB_SERVER_ROOT/.bash_profile"
 BASH_RC_SOURCE_FILE="$CWD/.bash_profile"
 
 
-
 # Configure some environment aspects (PATH, /etc/hosts, 'www' user profile etc)
 configure_env
 configure_ssh_key_for_www_user
@@ -40,20 +38,20 @@ configure_ssh_key_for_www_user
 #
 install_typo3_app
 cd $APP_ROOT
+
+# Use provided by user T3APP_INSTALLATION_TYPE or detect it
+INSTALLATION_TYPE=${T3APP_INSTALLATION_TYPE:-$(detect_installation_type)}
+log "Detected installation type: ${INSTALLATION_TYPE^^}."
+
 wait_for_db
 
 hook_user_build_script --post-install
-
-# Detect real INSTALLATION_TYPE, based on what's found in composer.json
-grep "typo3/neos" composer.json && INSTALLATION_TYPE="neos"
-log && log "Detected installation type: ${INSTALLATION_TYPE^^}."
-
 
 #
 # Regular TYPO3 app initialisation
 #
 if [ "${T3APP_DO_INIT^^}" = TRUE ]; then
-  log "Configuring TYPO3 ${INSTALLATION_TYPE^^} app..." && log
+  log "Configuring ${INSTALLATION_TYPE^^} app..." && log
 
   create_app_db $T3APP_DB_NAME
   create_settings_yaml "Configuration/Settings.yaml"
@@ -112,10 +110,10 @@ hook_user_build_script --post-init
 
 
 #
-# Initialise TYPO3 app for running test
+# Initialise Flow/Neos app for running test
 #
 if [ "${T3APP_DO_INIT_TESTS^^}" = TRUE ]; then
-  log && log "Configuring TYPO3 ${INSTALLATION_TYPE^^} app for Behat testing:"
+  log && log "Configuring ${INSTALLATION_TYPE^^} app for Behat testing:"
 
   # @TODO: is there anything to do here when Behat is not available? Not sure...
   # Functional tests can run without any extra configuration in Testing context

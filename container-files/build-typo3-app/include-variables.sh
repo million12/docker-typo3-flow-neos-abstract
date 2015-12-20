@@ -13,6 +13,7 @@ T3APP_BUILD_COMPOSER_PARAMS=${T3APP_BUILD_COMPOSER_PARAMS:="--prefer-dist --opti
 # ENV variables used during container runtime
 ###############################################
 
+T3APP_INSTALLATION_TYPE=${T3APP_INSTALLATION_TYPE:=""}
 T3APP_DO_INIT=${T3APP_DO_INIT:=true}
 T3APP_DO_INIT_TESTS=${T3APP_DO_INIT_TESTS:=false}
 T3APP_NAME=${T3APP_NAME:="typo3-app"}

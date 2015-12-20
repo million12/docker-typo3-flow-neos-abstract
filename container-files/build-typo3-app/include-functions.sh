@@ -24,6 +24,24 @@ function wait_for_db() {
   mysql $MYSQL_CMD_PARAMS --execute "status"
 }
 
+
+#########################################################
+# Detect installation type (`flow` or `neos`).
+#
+# Returns:
+#   (string) detected installation type, `flow` or `neos`
+#########################################################
+function detect_installation_type {
+  local detected_install_type="flow"
+
+  # test for "typo3/neos" package in composer.json
+  # test for "neos/neos-development-collection" package in composer.json
+  grep --silent -e "neos/neos" -e "typo3/neos" composer.json && detected_install_type="neos"
+
+  echo $detected_install_type
+}
+
+
 #########################################################
 # Moves pre-installed in /tmp TYPO3 to its
 # target location ($APP_ROOT), if it's not there yet

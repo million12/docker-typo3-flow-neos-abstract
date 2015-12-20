@@ -64,7 +64,8 @@ For an **example of Neos image** built on top of this one, see [million12/typo3-
 
 ## Flow or Neos?
 
-The configuration script detects if it's Flow or Neos installation. When `typo3/neos` is found in `composer.json`, Neos installation is assumed and few extra steps are performed (e.g. site import). See [configure-typo3-app.sh](container-files/build-typo3-app/configure-typo3-app.sh) for details (look for `INSTALLATION_TYPE` variable).
+System will try to figure out automatically if it's **Flow** or **Neos** distribution. See `T3APP_INSTALLATION_TYPE` env variable below if you want bypass automatic detection.
+
 
 ## Host names, FLOW_CONTEXT environment and testing
 
@@ -191,6 +192,14 @@ Extra parameters for `composer install`. You might override it with e.g. `--no-d
 ### Runtime variables
 
 Following is the list of available ENV variables relevant during runtime phase (`docker run`). You can embed them in Dockerfile as well as provide via `--env` param to `docker run` command.
+
+**T3APP_INSTALLATION_TYPE**  
+Default: `T3APP_INSTALLATION_TYPE=""`  
+Valid values: `flow`, `neos` or empty string (default, equals auto-detection)
+
+The configuration script tries to detects if it is Flow or Neos installation. When `typo3/neos` or `neos/neos` is found in `composer.json`, Neos installation is assumed and few extra steps are performed (e.g. site import, creation of admin user). Otherwise `flow` installation type is assumed.  
+
+If automatic detection doesn't work for your setup, you can force it by setting this value explicitly.
 
 **T3APP_DO_INIT**  
 Default: `T3APP_DO_INIT=true`  

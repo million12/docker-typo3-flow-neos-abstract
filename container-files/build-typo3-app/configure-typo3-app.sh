@@ -65,16 +65,17 @@ if [ "${T3APP_DO_INIT^^}" = TRUE ]; then
   update_settings_yaml "Configuration/Development/Settings.yaml" $T3APP_DB_NAME
 
   # DB migration: where are we? Also export it so site build script can access to that info.
+  log "DB status: checking migration status..."
   executed_migrations=$(get_db_executed_migrations)
   export RUNTIME_EXECUTED_MIGRATIONS=$executed_migrations
-  log "DB executed migrations: $executed_migrations"
+  log "DB status: $executed_migrations migrations executed."
 
   hook_user_build_script --post-settings
 
-  # Only proceed with doctrine:migration it is a fresh installation...
-  if [[ $(./flow help | grep "database:setcharset") ]]; then
-    ./flow database:setcharset # comatibility with Flow < 3.0
+  if [[ $(./flow help | grep "database:setcharset") ]]; then # Only run if this command is available (not in Flow < 3.0)
+    ./flow database:setcharset
   fi
+  # Only proceed with doctrine:migration if it is a fresh installation...
   if [[ $executed_migrations == 0 ]]; then
     log "Fresh ${INSTALLATION_TYPE^^} installation detected: making DB migration:"
     doctrine_update

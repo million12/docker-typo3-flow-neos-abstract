@@ -64,13 +64,13 @@ if [ "${T3APP_DO_INIT^^}" = TRUE ]; then
   update_settings_yaml "Configuration/Production/Settings.yaml" $T3APP_DB_NAME
   update_settings_yaml "Configuration/Development/Settings.yaml" $T3APP_DB_NAME
 
+  hook_user_build_script --post-settings
+
   # DB migration: where are we? Also export it so site build script can access to that info.
   log "DB status: checking migration status..."
   executed_migrations=$(get_db_executed_migrations)
   export RUNTIME_EXECUTED_MIGRATIONS=$executed_migrations
   log "DB status: $executed_migrations migrations executed."
-
-  hook_user_build_script --post-settings
 
   if [[ $(./flow help | grep "database:setcharset") ]]; then # Only run if this command is available (not in Flow < 3.0)
     ./flow database:setcharset

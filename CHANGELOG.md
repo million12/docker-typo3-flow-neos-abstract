@@ -1,4 +1,4 @@
-## [not released yet]
+## 0.4.0 (2016-02-09)
 
 - FEATURE: Surf deployment support
 - FEATURE: more user hooks (see README)

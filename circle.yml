@@ -241,6 +241,7 @@ test:
 
 deployment:
   rebuild_image_on_docker_hub:
-    branch: master
+    branch: [master, php56, php70]
     commands:
-      - curl --data "source_type=Branch&source_name=master" -X POST https://registry.hub.docker.com/u/million12/typo3-flow-neos-abstract/trigger/cb18c6d5-235e-405f-99c1-947df2ddacae/
+      - 'curl -H "Content-Type: application/json" --data "{\"docker_tag\": \"$PHP_IMAGE_TAG\"}" -X POST https://registry.hub.docker.com/u/million12/typo3-flow-neos-abstract/trigger/cb18c6d5-235e-405f-99c1-947df2ddacae/'
+      - 'curl -X POST --data-urlencode "payload={\"channel\": \"#dev-docker-builds\", \"username\": \"CircleCI\", \"text\": \"*million12/typo3-flow-neos-abstract:$PHP_IMAGE_TAG* build triggered on <https://hub.docker.com/r/million12/typo3-flow-neos-abstract/builds/|Docker Hub> (from CI build <https://circleci.com/gh/million12/docker-typo3-flow-neos-abstract/$CIRCLE_BUILD_NUM|#$CIRCLE_BUILD_NUM>)\", \"icon_emoji\": \":whale2:\"}" https://hooks.slack.com/services/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'

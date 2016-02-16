@@ -12,13 +12,13 @@ machine:
     neos: 127.0.0.1
     surf.smoke.test.domain: 127.0.0.1
   environment:
+    PHP_IMAGE_TAG: php70
     DB_USER: db-user
     DB_PASS: db-password
 
 dependencies:
   pre:
-    - docker pull million12/nginx-php
-    - docker pull million12/php-testing:
+    - 'docker pull million12/php-testing:$PHP_IMAGE_TAG':
         background: true
     - docker pull million12/mariadb:
         background: true
@@ -26,9 +26,9 @@ dependencies:
   override:
     # Build abstract million12/typo3-flow-neos-abstract image
     - docker build --tag=test/typo3-flow-neos-abstract .
-    - docker build --tag=test/typo3-flow Tests/Flow/
-    - docker build --tag=test/typo3-flow-no-preinstall Tests/Flow.NoPreinstall
-    - docker build --tag=test/typo3-neos Tests/Neos/
+    - docker build --tag=test/typo3-flow --file Tests/Dockerfile-Flow Tests/
+    - docker build --tag=test/typo3-flow-no-preinstall --file Tests/Dockerfile-Flow Tests/
+    - docker build --tag=test/typo3-neos --file Tests/Dockerfile-Neos Tests/
 
   post:
     # Launch DB backend
@@ -54,7 +54,7 @@ test:
     - curl -s -L http://flow:8000 | grep "Kickstart your first package"
     # Run all Flow tests (unit, functional)
     - |
-      docker run -ti --volumes-from=flow --link=flow:web --link=db:db million12/php-testing "
+      docker run -ti --volumes-from=flow --link=flow:web --link=db:db million12/php-testing:$PHP_IMAGE_TAG "
         su www -c \"
           cd ~/flow; \
           echo -e '\n\n======== RUNNING FLOW TESTS =======\n\n'; \
@@ -86,14 +86,14 @@ test:
     - curl -sSL --head http://surf.smoke.test.domain:8000 | grep 404
     # Test: Surf smoke domain: make an alias to 'current' release, just to test if it's properly configured
     - |
-      docker run -ti --volumes-from=flow-surf --link=flow-surf:web --link=db:db million12/php-testing "
+      docker run -ti --volumes-from=flow-surf --link=flow-surf:web --link=db:db million12/php-testing:$PHP_IMAGE_TAG "
         su www -c \"cd ~/flow/surf/releases && ln -snf current next\"
       "
     - curl -sSL --head http://surf.smoke.test.domain:8000 | grep "200 OK"
     - curl -sSL http://surf.smoke.test.domain:8000 | grep "Kickstart your first package"
     # Run all Flow tests (unit, functional)
     - |
-      docker run -ti --volumes-from=flow-surf --link=flow-surf:web --link=db:db million12/php-testing "
+      docker run -ti --volumes-from=flow-surf --link=flow-surf:web --link=db:db million12/php-testing:$PHP_IMAGE_TAG "
         su www -c \"
           cd ~/flow/surf/releases/current; \
           echo -e '\n\n======== RUNNING FLOW TESTS =======\n\n'; \
@@ -184,7 +184,7 @@ test:
     # any problems there. These are vendor tests and errors there
     # do not indicate that this Docker image is faulty.
     - |
-      docker run -ti --volumes-from=neos-testing --link=neos-testing:web --link=db:db million12/php-testing "
+      docker run -ti --volumes-from=neos-testing --link=neos-testing:web --link=db:db million12/php-testing:$PHP_IMAGE_TAG "
         env && \
         echo \$WEB_PORT_80_TCP_ADDR \$WEB_ENV_T3APP_VHOST_NAMES >> /etc/hosts && cat /etc/hosts && \
         su www -c \"
@@ -222,7 +222,7 @@ test:
     # make some hardcoded change in a demo package, so we can test against it
     # We replace 'Kickstart' word with 'Bootstrap' in the welcome screen
     - |
-      docker run -it --volumes-from=flow-multi-data million12/php-testing "su www -c \"
+      docker run -it --volumes-from=flow-multi-data million12/php-testing:$PHP_IMAGE_TAG "su www -c \"
         cd ~/flow; \
         sed -i -r "s#Kickstart#Bootstrap#g" Packages/Framework/TYPO3.Welcome/Resources/Private/Templates/Standard/Index.html; \
         FLOW_CONTEXT=Production ./flow flow:cache:flush && ./flow cache:warmup
@@ -241,6 +241,7 @@ test:
 
 deployment:
   rebuild_image_on_docker_hub:
-    branch: master
+    branch: [master, php56, php70]
     commands:
-      - curl --data "source_type=Branch&source_name=master" -X POST https://registry.hub.docker.com/u/million12/typo3-flow-neos-abstract/trigger/cb18c6d5-235e-405f-99c1-947df2ddacae/
+      - 'curl -H "Content-Type: application/json" --data "{\"docker_tag\": \"$PHP_IMAGE_TAG\"}" -X POST https://registry.hub.docker.com/u/million12/typo3-flow-neos-abstract/trigger/cb18c6d5-235e-405f-99c1-947df2ddacae/'
+      - 'curl -X POST --data-urlencode "payload={\"channel\": \"#dev-docker-builds\", \"username\": \"CircleCI\", \"text\": \"*million12/typo3-flow-neos-abstract:$PHP_IMAGE_TAG* build triggered on <https://hub.docker.com/r/million12/typo3-flow-neos-abstract/builds/|Docker Hub> (from CI build <https://circleci.com/gh/million12/docker-typo3-flow-neos-abstract/$CIRCLE_BUILD_NUM|#$CIRCLE_BUILD_NUM>)\", \"icon_emoji\": \":whale2:\"}" https://hooks.slack.com/services/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'

@@ -1,7 +1,8 @@
 # Flow/Neos Docker image
 [![Circle CI](https://circleci.com/gh/million12/docker-typo3-flow-neos-abstract/tree/master.svg?style=svg)](https://circleci.com/gh/million12/docker-typo3-flow-neos-abstract/tree/master)
 
-This is a Docker image [million12/typo3-flow-neos-abstract](https://registry.hub.docker.com/u/million12/typo3-flow-neos-abstract) for Flow and [Neos](https://neos.io/) application deployments.
+This is a Docker image [million12/typo3-flow-neos-abstract](https://registry.hub.docker.com/u/million12/typo3-flow-neos-abstract) for Flow and [Neos](https://neos.io/) application deployments. It's Homestead (vide [Laravel Homestead](http://laravel.com/docs/master/homestead)) for your Flow or Neos applications.
+
 
 ## Features
 
@@ -12,13 +13,20 @@ This is a Docker image [million12/typo3-flow-neos-abstract](https://registry.hub
 * [Surf](http://docs.typo3.org/surf/TYPO3SurfDocumentation/) deployment support.
 * Custom build scripts, user hooks available for a few installation/configuration steps.
 * Ability to run all unit, functional, Behat tests with this image and [million12/php-testing](https://github.com/million12/docker-php-testing).
-* PHP-FPM (from parent [million12/nginx-php](https://github.com/million12/docker-nginx-php)), tuned for Flow/Neos applications.  
-  Different versions of PHP available in a separate branches: **5.5** (branch php-55, `million12/typo3-flow-neos-abstract:php-55`), **5.6** (master, `million12/typo3-flow-neos-abstract:latest`), **7.0** (branch php-70, `million12/typo3-flow-neos-abstract:php-70`).
+* PHP-FPM (from parent [million12/nginx-php](https://github.com/million12/docker-nginx-php)), tuned for Flow/Neos applications.
 * External database fully configurable. Use linked MariaDB container or completely external DB service.
 * CI tests to cover functionality of this image.
 
-As you can see, it can be like Homestead (vide [Laravel Homestead](http://laravel.com/docs/master/homestead)) for your Flow or Neos application.
 
+## Versions
+
+For different PHP versions, look up different branches of this repository.  
+On Docker Hub you can find them under different tags:  
+* `million12/typo3-flow-neos-abstract:latest` - PHP 7.0 based # built from `master` branch [![Circle CI](https://circleci.com/gh/million12/docker-typo3-flow-neos-abstract.svg?style=svg)](https://circleci.com/gh/million12/docker-typo3-flow-neos-abstract)
+* `million12/typo3-flow-neos-abstract:php70` - PHP 7.0 based # built from `php70` branch [![Circle CI](https://circleci.com/gh/million12/docker-typo3-flow-neos-abstract/tree/php70.svg?style=svg)](https://circleci.com/gh/million12/docker-typo3-flow-neos-abstract/tree/php70)
+* `million12/typo3-flow-neos-abstract:php56` - PHP 5.6 based # built from `php56` branch [![Circle CI](https://circleci.com/gh/million12/docker-typo3-flow-neos-abstract/tree/php56.svg?style=svg)](https://circleci.com/gh/million12/docker-typo3-flow-neos-abstract/tree/php56)
+
+If you use Neos 2.1 or newer, use `:php70` (or `:latest`). If you use Neos 2.0 or older, stick with `:php56` image.
 
 ## Usage
 
@@ -379,10 +387,10 @@ Default: `T3APP_DB_PASS=password`
 
 ## Production usage
 
-This image is not only perfect for development purposes, it's **production ready**. There are handful of projects where people use it on production:
+This image is not only perfect for development purposes, it's **production ready**. There are handful of projects where people use it on production, just to list few of them:
 * [m12.io](http://m12.io/)
 * [sfi.ru](http://sfi.ru/)
-* [typostrap.io](https://typostrap.io/) and [tstr.io](https://tstr.io/)
+* [prototypebrewery.io](http://prototypebrewery.io/)
 
 
 ## Authors and License
@@ -394,4 +402,4 @@ Licensed under: The MIT License (MIT)
 
 ---
 
-**Sponsored by** [Typostrap.io - the new prototyping tool](http://typostrap.io/) for building highly-interactive prototypes of your website or web app. Built on top of Neos CMS and Zurb Foundation framework.
+**Sponsored by [Prototype Brewery](http://prototypebrewery.io/)** - the new prototyping tool for building highly-interactive prototypes of your website or web app. Built on top of [Neos CMS](https://www.neos.io/) and [Zurb Foundation](http://foundation.zurb.com/) framework.

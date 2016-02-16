@@ -12,7 +12,7 @@ machine:
     neos: 127.0.0.1
     surf.smoke.test.domain: 127.0.0.1
   environment:
-    PHP_IMAGE_TAG: latest
+    PHP_IMAGE_TAG: php56
     DB_USER: db-user
     DB_PASS: db-password
 

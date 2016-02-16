@@ -34,7 +34,7 @@ configure_env
 configure_ssh_key_for_www_user
 
 #
-# TYPO3 app installation
+# Flow/Neos app installation
 #
 install_typo3_app
 cd $APP_ROOT
@@ -48,7 +48,7 @@ wait_for_db
 hook_user_build_script --post-install
 
 #
-# Regular TYPO3 app initialisation
+# Regular Flow/Neos app initialisation
 #
 if [ "${T3APP_DO_INIT^^}" = TRUE ]; then
   log "Configuring ${INSTALLATION_TYPE^^} app..." && log
@@ -64,13 +64,13 @@ if [ "${T3APP_DO_INIT^^}" = TRUE ]; then
   update_settings_yaml "Configuration/Production/Settings.yaml" $T3APP_DB_NAME
   update_settings_yaml "Configuration/Development/Settings.yaml" $T3APP_DB_NAME
 
+  hook_user_build_script --post-settings
+
   # DB migration: where are we? Also export it so site build script can access to that info.
   log "DB status: checking migration status..."
   executed_migrations=$(get_db_executed_migrations)
   export RUNTIME_EXECUTED_MIGRATIONS=$executed_migrations
   log "DB status: $executed_migrations migrations executed."
-
-  hook_user_build_script --post-settings
 
   if [[ $(./flow help | grep "database:setcharset") ]]; then # Only run if this command is available (not in Flow < 3.0)
     ./flow database:setcharset
@@ -80,14 +80,14 @@ if [ "${T3APP_DO_INIT^^}" = TRUE ]; then
     log "Fresh ${INSTALLATION_TYPE^^} installation detected: making DB migration:"
     doctrine_update
   else
-    log "TYPO3 ${INSTALLATION_TYPE^^} app database already provisioned, skipping..."
+    log "${INSTALLATION_TYPE^^} app database already provisioned, skipping..."
   fi
 
   hook_user_build_script --post-db-migration
 
-  # TYPO3 Neos steps only:
+  # Neos CMS steps only:
   if [[ $INSTALLATION_TYPE == "neos" ]]; then
-    log "Continuing with TYPO3 Neos steps installation:"
+    log "Continuing with Neos CMS steps installation:"
     if [[ $executed_migrations == 0 ]]; then
       log "Fresh installation detected: creating admin user, importing site package:"
       create_admin_user
@@ -98,7 +98,7 @@ if [ "${T3APP_DO_INIT^^}" = TRUE ]; then
       neos_site_package_prune
       neos_site_package_install $T3APP_NEOS_SITE_PACKAGE
     else
-      log "TYPO3 Neos already set up, nothing to do."
+      log "Flow/Neos already set up, nothing to do."
     fi
   fi
 
@@ -107,7 +107,7 @@ if [ "${T3APP_DO_INIT^^}" = TRUE ]; then
 fi
 
 hook_user_build_script --post-init
-# Regular TYPO3 app initialisation (END)
+# Regular Flow/Neos app initialisation (END)
 
 
 #
@@ -155,7 +155,7 @@ if [ "${T3APP_DO_INIT_TESTS^^}" = TRUE ]; then
 
   hook_user_build_script --post-test-init
 fi
-# Initialise TYPO3 app for running test (END)
+# Initialise Flow/Neos app for running test (END)
 
 
 

@@ -26,9 +26,9 @@ dependencies:
   override:
     # Build abstract million12/typo3-flow-neos-abstract image
     - docker build --tag=test/typo3-flow-neos-abstract .
-    - docker build --tag=test/typo3-flow Tests/Flow/
-    - docker build --tag=test/typo3-flow-no-preinstall Tests/Flow.NoPreinstall
-    - docker build --tag=test/typo3-neos Tests/Neos/
+    - docker build --tag=test/typo3-flow --file Tests/Dockerfile-Flow Tests/
+    - docker build --tag=test/typo3-flow-no-preinstall --file Tests/Dockerfile-Flow Tests/
+    - docker build --tag=test/typo3-neos --file Tests/Dockerfile-Neos Tests/
 
   post:
     # Launch DB backend

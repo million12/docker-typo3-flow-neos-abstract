@@ -224,7 +224,7 @@ test:
     - |
       docker run -it --volumes-from=flow-multi-data million12/php-testing:$PHP_IMAGE_TAG "su www -c \"
         cd ~/flow; \
-        sed -i -r "s#Kickstart#Bootstrap#g" Packages/Framework/TYPO3.Welcome/Resources/Private/Templates/Standard/Index.html; \
+        sed -i -r "s#Kickstart#Bootstrap#g" Packages/Application/TYPO3.Welcome/Resources/Private/Templates/Standard/Index.html; \
         FLOW_CONTEXT=Production ./flow flow:cache:flush && ./flow cache:warmup
       \""
 

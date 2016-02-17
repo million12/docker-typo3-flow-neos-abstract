@@ -27,12 +27,4 @@ echo " == VHOSTS: ${T3APP_VHOST_NAMES}"
 echo " ======================================================================="
 echo
 
-if ! command_exists beard; then
-  echo "Missing Beard. Installing..."
-  curl -s http://beard.famelo.com/ > $APP_ROOT/bin/beard
-  chmod +x $APP_ROOT/bin/beard
-  beard --version
-  echo "Beard installed."
-fi
-
 cd $APP_ROOT

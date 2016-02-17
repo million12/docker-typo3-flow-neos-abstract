@@ -14,7 +14,7 @@ ADD container-files/build-typo3-app/pre-install-typo3-app.sh /build-typo3-app/pr
 
 ENV \
   T3APP_BUILD_REPO_URL=https://github.com/neos/neos-base-distribution.git \
-  T3APP_BUILD_BRANCH=2.0 \
+  T3APP_BUILD_BRANCH=2.1 \
   T3APP_NEOS_SITE_PACKAGE=TYPO3.NeosDemoTypo3Org
 
 RUN . /build-typo3-app/pre-install-typo3-app.sh

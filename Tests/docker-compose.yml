@@ -1,8 +1,9 @@
 #
 # This file is just for development purposes
 #
+#version: '2'
 
-# Launch DB container
+#services:
 db:
   image: million12/mariadb:latest
   ports:
@@ -10,14 +11,18 @@ db:
   environment:
     MARIADB_PASS: secret-db-password-qpu34thqrgaR3
 
-# Launch dev version of million12/typo3-flow-neos-abstract
-app:
-  image: million12/typo3-flow-neos-abstract-test
+neos:
+  image: neos
+#  build:
+#    context: ../
+#    dockerfile: Tests/Dockerfile
   ports:
-    - '8889:80'
+    - '8080:80'
+#    depends_on:
+#      - db
   links:
     - db:db
   environment:
-    T3APP_VHOST_NAMES: typo3-app dev.typo3-app behat.dev.typo3-app
-    T3APP_NEOS_SITE_PACKAGE: TYPO3.NeosDemoTypo3Org
-    T3APP_DO_INIT_TESTS: true
+    - T3APP_VHOST_NAMES=neos.local dev.neos.local behat.neos.local
+    - T3APP_NEOS_SITE_PACKAGE=TYPO3.NeosDemoTypo3Org
+    - T3APP_DO_INIT_TESTS=true

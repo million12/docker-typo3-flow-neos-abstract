@@ -18,6 +18,7 @@ machine:
 
 dependencies:
   pre:
+    - 'docker pull million12/nginx-php:$PHP_IMAGE_TAG'
     - 'docker pull million12/php-testing:$PHP_IMAGE_TAG':
         background: true
     - docker pull million12/mariadb:

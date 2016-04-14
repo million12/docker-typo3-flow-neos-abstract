@@ -7,7 +7,7 @@ MAINTAINER Marcin Ryzycki marcin@m12.io
 RUN \
   `# Install Beard - https://github.com/mneuhaus/Beard` \
   curl -s http://beard.famelo.com/ > /usr/bin/beard && chmod +x /usr/bin/beard && \
-  beard --version --no-ansi || true `# beard seems to not work well with PHP 7`
+  beard --version
 
 # Add all files from container-files/ to the root of the container's filesystem
 ADD container-files /

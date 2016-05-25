@@ -24,5 +24,5 @@ neos:
     - db:db
   environment:
     - T3APP_VHOST_NAMES=neos.local dev.neos.local behat.neos.local
-    - T3APP_NEOS_SITE_PACKAGE=TYPO3.NeosDemoTypo3Org
+    - T3APP_NEOS_SITE_PACKAGE=Neos.Demo
     - T3APP_DO_INIT_TESTS=true

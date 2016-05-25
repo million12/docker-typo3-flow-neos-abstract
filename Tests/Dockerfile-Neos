@@ -1,4 +1,4 @@
-FROM test/typo3-flow-neos-abstract
+FROM test/flow-neos-abstract
 MAINTAINER Marcin Ryzycki marcin@m12.io
 
 ENV \

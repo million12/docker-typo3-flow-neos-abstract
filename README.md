@@ -247,9 +247,13 @@ Neos installation only. If this is fresh installation, admin user will be create
 
 **T3APP_NEOS_SITE_PACKAGE**  
 Default: `T3APP_NEOS_SITE_PACKAGE=false`
-Neos installation only. The default value is FALSE which means site package will not be installed unless you specify one. For default Base distribution you would specify here `TYPO3.NeosDemoTypo3Org` value. For your own distribution specify your custom site package.
+Neos installation only. The default value is FALSE which means the site package will NOT be installed UNLESS you specify one. For default Base distribution you would specify here `Neos.Demo` value. For your own distribution specify your custom site package.
 
-When this value is specified, the site package will be installed and its content imported (if it is a fresh installation). If you want to re-install / re-import the site content even if it was already installed, set `T3APP_NEOS_SITE_PACKAGE_FORCE_REIMPORT=true` (see below).
+When this value is specified, the site package will be installed and its content imported (if it's a fresh installation). If you want to re-install / re-import the site content even if it was already installed, set `T3APP_NEOS_SITE_PACKAGE_FORCE_REIMPORT=true` (see below).
+
+Note: you can also specify here path to your Content.xml instead of package key. 
+The path needs to be relative to Neos root directory. For instance,
+`Packages/Sites/My.Site/Resources/Private/Content/My-Content.xml`.
 
 **T3APP_NEOS_SITE_PACKAGE_FORCE_REIMPORT**  
 Default: `T3APP_NEOS_SITE_PACKAGE_FORCE_REIMPORT=false`  

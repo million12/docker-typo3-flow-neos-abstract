@@ -317,11 +317,19 @@ function create_admin_user() {
 #########################################################
 function neos_site_package_install() {
   local site_package_name=$@
+
   if [ "${site_package_name^^}" = FALSE ]; then
     log "Skipping installing site package (T3APP_NEOS_SITE_PACKAGE is set to FALSE)."
   else
     log "Installing $site_package_name site package..."
-    ./flow site:import --packageKey $site_package_name
+
+    # If .xml file has been provided, import with --filename.
+    # Otherwise import the default site content from --packageKey.
+    if [[ $T3APP_NEOS_SITE_PACKAGE == *.xml ]]; then
+      ./flow site:import --filename $site_package_name
+    else
+      ./flow site:import --packageKey $site_package_name
+    fi
   fi
 }
 

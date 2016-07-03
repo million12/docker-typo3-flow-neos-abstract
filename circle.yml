@@ -7,9 +7,9 @@ machine:
   services:
     - docker
   hosts:
-    typo3-app: 127.0.0.1
     flow: 127.0.0.1
     neos: 127.0.0.1
+    some-app: 127.0.0.1
     surf.smoke.test.domain: 127.0.0.1
   environment:
     PHP_IMAGE_TAG: php70
@@ -18,6 +18,7 @@ machine:
 
 dependencies:
   pre:
+    - 'docker pull million12/nginx-php:$PHP_IMAGE_TAG'
     - 'docker pull million12/php-testing:$PHP_IMAGE_TAG':
         background: true
     - docker pull million12/mariadb:
@@ -25,10 +26,10 @@ dependencies:
 
   override:
     # Build abstract million12/typo3-flow-neos-abstract image
-    - docker build --tag=test/typo3-flow-neos-abstract .
-    - docker build --tag=test/typo3-flow --file Tests/Dockerfile-Flow Tests/
-    - docker build --tag=test/typo3-flow-no-preinstall --file Tests/Dockerfile-Flow Tests/
-    - docker build --tag=test/typo3-neos --file Tests/Dockerfile-Neos Tests/
+    - docker build --tag=test/flow-neos-abstract .
+    - docker build --tag=test/flow --file Tests/Dockerfile-Flow Tests/
+    - docker build --tag=test/flow-no-preinstall --file Tests/Dockerfile-Flow Tests/
+    - docker build --tag=test/neos --file Tests/Dockerfile-Neos Tests/
 
   post:
     # Launch DB backend
@@ -43,10 +44,10 @@ test:
     # Flow: default setup
     # ##################################################
     # Launch it with default ENV variables
-    - docker run -d --name=flow -p=8000:80 --link=db:db --env="T3APP_NAME=flow" test/typo3-flow
+    - docker run -d --name=flow -p=8000:80 --link=db:db --env="T3APP_NAME=flow" test/flow
     - docker logs -f flow > ${CIRCLE_ARTIFACTS}/docker-flow.log:
         background: true
-    # Wait till TYPO3 Flow is fully configured
+    # Wait till Flow is fully configured
     - while true; do if grep "nginx entered RUNNING state" ${CIRCLE_ARTIFACTS}/docker-flow.log; then break; else sleep 1; fi done
     # Test: do basic front-end tests
     - curl -L --head http://flow:8000 && curl -s -L http://flow:8000
@@ -73,10 +74,10 @@ test:
         --env="T3APP_NAME=flow" \
         --env="T3APP_USE_SURF_DEPLOYMENT=true" \
         --env="T3APP_SURF_SMOKE_TEST_DOMAIN=surf.smoke.test.domain" \
-        test/typo3-flow
+        test/flow
     - docker logs -f flow-surf > ${CIRCLE_ARTIFACTS}/docker-flow-surf.log:
         background: true
-    # Wait till TYPO3 Flow is fully configured
+    # Wait till Flow is fully configured
     - while true; do if grep "nginx entered RUNNING state" ${CIRCLE_ARTIFACTS}/docker-flow-surf.log; then break; else sleep 1; fi done
     # Test: do basic front-end tests
     - curl -L --head http://flow:8000 && curl -s -L http://flow:8000
@@ -108,10 +109,10 @@ test:
     # ##################################################
     # Test Flow container without pre-installed app
     # ##################################################
-    - docker run -d --name=flow-no-preinstall -p=8000:80 --link=db:db --env="T3APP_NAME=flow" test/typo3-flow-no-preinstall
+    - docker run -d --name=flow-no-preinstall -p=8000:80 --link=db:db --env="T3APP_NAME=flow" test/flow-no-preinstall
     - docker logs -f flow-no-preinstall > ${CIRCLE_ARTIFACTS}/docker-flow-no-preinstall.log:
         background: true
-    # Wait till TYPO3 Flow is fully configured
+    # Wait till Flow is fully configured
     - while true; do if grep "nginx entered RUNNING state" ${CIRCLE_ARTIFACTS}/docker-flow-no-preinstall.log; then break; else sleep 1; fi done
     # Test: do basic front-end tests
     - curl -L --head http://flow:8000 && curl -s -L http://flow:8000
@@ -127,10 +128,10 @@ test:
     # Test Flow container without pre-installed app
     # and with T3APP_USE_SURF_DEPLOYMENT=TRUE
     # ##################################################
-    - docker run -d --name=flow-surf-no-preinstall -p=8000:80 --link=db:db --env="T3APP_NAME=flow" --env="T3APP_USE_SURF_DEPLOYMENT=true" test/typo3-flow-no-preinstall
+    - docker run -d --name=flow-surf-no-preinstall -p=8000:80 --link=db:db --env="T3APP_NAME=flow" --env="T3APP_USE_SURF_DEPLOYMENT=true" test/flow-no-preinstall
     - docker logs -f flow-surf-no-preinstall > ${CIRCLE_ARTIFACTS}/docker-flow-surf-no-preinstall.log:
         background: true
-    # Wait till TYPO3 Flow is fully configured
+    # Wait till Flow is fully configured
     - while true; do if grep "nginx entered RUNNING state" ${CIRCLE_ARTIFACTS}/docker-flow-surf-no-preinstall.log; then break; else sleep 1; fi done
     # Test: do basic front-end tests
     - curl -L --head http://flow:8000 && curl -s -L http://flow:8000
@@ -143,7 +144,7 @@ test:
 
 
     # ##################################################
-    # Build TYPO3 Neos container and do some basic front-end tests
+    # Test Neos container, do some basic front-end tests
     # Also test agains custom DB params (ie. hostname, user, pass)
     # ##################################################
     - |
@@ -153,10 +154,10 @@ test:
         --env="T3APP_DB_USER=$DB_USER" \
         --env="T3APP_DB_PASS=$DB_PASS" \
         --env="T3APP_DB_NAME=my_db_name" \
-        test/typo3-neos
+        test/neos
     - docker logs -f neos > ${CIRCLE_ARTIFACTS}/docker-neos.log:
         background: true
-    # Wait till TYPO3 Neos is fully configured
+    # Wait till Neos is fully configured
     - while true; do if grep "nginx entered RUNNING state" ${CIRCLE_ARTIFACTS}/docker-neos.log; then break; else sleep 1; fi done
     # Test: do basic front-end tests
     - curl -L --head http://neos:8100 && curl -s -L http://neos:8100
@@ -170,13 +171,38 @@ test:
     - docker rm -f neos || true
 
 
+
+    # ##################################################
+    # Test Neos container when T3APP_NEOS_SITE_PACKAGE
+    # contains path to .xml file.
+    # ##################################################
+    - |
+      docker run -d --name=neos-xml -p=8100:80 --link=db:db.local \
+        --env="T3APP_DB_NAME=neos_xml" \
+        --env="T3APP_DB_HOST=db.local" \
+        --env="T3APP_DB_USER=$DB_USER" \
+        --env="T3APP_DB_PASS=$DB_PASS" \
+        --env="T3APP_NEOS_SITE_PACKAGE=Packages/Sites/Neos.Demo/Resources/Private/Content/Sites.xml" \
+        test/neos
+    - docker logs -f neos-xml > ${CIRCLE_ARTIFACTS}/docker-neos-xml.log:
+        background: true
+    # Wait till Neos is fully configured
+    - while true; do if grep "nginx entered RUNNING state" ${CIRCLE_ARTIFACTS}/docker-neos-xml.log; then break; else sleep 1; fi done
+    # Test: do basic front-end tests
+    - curl -L --head http://neos:8100 && curl -s -L http://neos:8100
+    - curl -s http://neos:8100 | grep "Power when you need it"
+    # Clean up
+    - docker rm -f neos-xml || true
+
+
+
     # ###################################################################
     # Launch Neos container again, but do only initialisation for testing
     # ###################################################################
-    - docker run -d --name=neos-testing -p=8200:80 --link=db:db --env="T3APP_DO_INIT_TESTS=true" --env="T3APP_VHOST_NAMES=neos dev.neos behat.dev.neos" test/typo3-neos
+    - docker run -d --name=neos-testing -p=8200:80 --link=db:db --env="T3APP_DO_INIT_TESTS=true" --env="T3APP_VHOST_NAMES=neos dev.neos behat.dev.neos" test/neos
     - docker logs -f neos-testing > ${CIRCLE_ARTIFACTS}/docker-neos-testing.log:
         background: true
-    # Wait till TYPO3 Neos is fully configured
+    # Wait till Neos is fully configured
     - while true; do if grep "nginx entered RUNNING state" -a ${CIRCLE_ARTIFACTS}/docker-neos-testing.log; then break; else sleep 1; fi done
     - curl -L --head http://neos:8200 && curl -s -L http://neos:8200
 
@@ -209,12 +235,12 @@ test:
     # ##################################################
     - docker run -d -v /data --name=flow-multi-data busybox:latest
 
-    - docker run -d --name=flow-multi-1 -p=8001:80 --link=db:db --volumes-from=flow-multi-data --env="T3APP_NAME=typo3-app" test/typo3-flow
+    - docker run -d --name=flow-multi-1 -p=8001:80 --link=db:db --volumes-from=flow-multi-data --env="T3APP_NAME=some-app" test/flow
+    - docker run -d --name=flow-multi-2 -p=8002:80 --link=db:db --volumes-from=flow-multi-data --env="T3APP_NAME=flow" test/flow
+
     - docker logs -f flow-multi-1 > ${CIRCLE_ARTIFACTS}/docker-flow-muilti-1.log 2>&1:
         background: true
     - while true; do if grep "nginx entered RUNNING state" ${CIRCLE_ARTIFACTS}/docker-flow-muilti-1.log; then break; else sleep 1; fi done
-
-    - docker run -d --name=flow-multi-2 -p=8002:80 --link=db:db --volumes-from=flow-multi-data --env="T3APP_NAME=flow" test/typo3-flow
     - docker logs -f flow-multi-2 > ${CIRCLE_ARTIFACTS}/docker-flow-muilti-2.log 2>&1:
         background: true
     - while true; do if grep "nginx entered RUNNING state" ${CIRCLE_ARTIFACTS}/docker-flow-muilti-2.log; then break; else sleep 1; fi done
@@ -229,13 +255,13 @@ test:
       \""
 
     # Test: do basic front-end tests against the 2nd container
-    - curl -L --head http://typo3-app:8002 && curl -s -L http://typo3-app:8002 # just to see the output
+    - curl -L --head http://some-app:8002 && curl -s -L http://some-app:8002 # just to see the output
     - curl -L --head http://flow:8002 && curl -s -L http://flow:8002 # just to see the output
 
-    - curl -s -L --head http://typo3-app:8002 | grep "HTTP/1.1 200 OK" && curl -s -L --head http://typo3-app:8002 | grep "X-Flow-Powered" && curl -s -L --head http://typo3-app:8002 | grep "/flow/welcome"
+    - curl -s -L --head http://some-app:8002 | grep "HTTP/1.1 200 OK" && curl -s -L --head http://some-app:8002 | grep "X-Flow-Powered" && curl -s -L --head http://some-app:8002 | grep "/flow/welcome"
     - curl -s -L --head http://flow:8002 | grep "HTTP/1.1 200 OK" && curl -s -L --head http://flow:8002 | grep "X-Flow-Powered" && curl -s -L --head http://flow:8002 | grep "/flow/welcome"
 
-    - curl -s -L http://typo3-app:8002 | grep "Kickstart your first package"
+    - curl -s -L http://some-app:8002 | grep "Kickstart your first package"
     - curl -s -L http://flow:8002 | grep "Bootstrap your first package"
 
 

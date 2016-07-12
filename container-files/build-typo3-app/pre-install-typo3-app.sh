@@ -20,7 +20,7 @@ source /build-typo3-app/include-variables.sh
 source /build-typo3-app/include-functions-common.sh
 
 log
-log "Installing TYPO3 app from $T3APP_BUILD_REPO_URL ($T3APP_BUILD_BRANCH) repository..."
+log "Installing Flow/Neos app from $T3APP_BUILD_REPO_URL ($T3APP_BUILD_BRANCH) repository..."
 log
 
 configure_git
